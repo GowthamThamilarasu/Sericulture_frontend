@@ -71,7 +71,63 @@ a {
 }
 
 .accent-gold {
-  background-image: linear-gradient(100deg, #6e4a06 0%, #94660c 35%, #b07f1c 65%, #7d5509 100%);
+  background-image: linear-gradient(100deg, #c98a00 0%, #e8ae12 35%, #f5c52e 60%, #d19a06 100%);
+}
+
+/* Glittering gold: a streak of light sweeps across the letters while sparkles twinkle over them. */
+.accent-glitter {
+  position: relative;
+  display: inline-block;
+  background-image:
+    linear-gradient(105deg, transparent 42%, rgb(255 251 224 / 0.95) 50%, transparent 58%),
+    linear-gradient(100deg, #c98a00 0%, #e8ae12 35%, #f5c52e 60%, #d19a06 100%);
+  background-size: 250% 100%, 100% 100%;
+  background-repeat: no-repeat;
+  background-position: 100% 0, 0 0;
+  animation: glitter-sweep 3.4s ease-in-out infinite;
+}
+
+.glint {
+  position: absolute;
+  background: radial-gradient(circle, #ffffff 0%, #ffe9a3 45%, #f5c52e 100%);
+  clip-path: polygon(50% 0%, 60% 40%, 100% 50%, 60% 60%, 50% 100%, 40% 60%, 0% 50%, 40% 40%);
+  filter: drop-shadow(0 0 0.06em rgb(245 197 46 / 0.9));
+  opacity: 0;
+  pointer-events: none;
+  animation: glint-twinkle 2.8s ease-in-out infinite;
+}
+
+@keyframes glitter-sweep {
+  0%,
+  35% {
+    background-position: 100% 0, 0 0;
+  }
+  100% {
+    background-position: 0% 0, 0 0;
+  }
+}
+
+@keyframes glint-twinkle {
+  0%,
+  55%,
+  100% {
+    opacity: 0;
+    transform: scale(0.2) rotate(0deg);
+  }
+  28% {
+    opacity: 1;
+    transform: scale(1) rotate(45deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .accent-glitter {
+    animation: none;
+  }
+
+  .glint {
+    display: none;
+  }
 }
 
 /* For dark backgrounds. */
@@ -606,6 +662,203 @@ a {
   translate: 0 48px;
 }
 
+/* Field / shed photo cards: rise in on scroll, then open up on hover to show what is tracked. */
+.scene-card {
+  box-shadow: 0 18px 40px -28px rgb(11 16 13 / 0.55);
+  transition:
+    opacity 700ms ease calc(var(--i, 0) * 160ms),
+    translate 900ms cubic-bezier(0.22, 1, 0.36, 1) calc(var(--i, 0) * 160ms),
+    box-shadow 400ms ease;
+}
+
+.rv-on:not([data-inview]) .scene-card {
+  opacity: 0;
+  translate: 0 56px;
+}
+
+.scene-photo {
+  transition: scale 1400ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.rv-on:not([data-inview]) .scene-photo {
+  scale: 1.2;
+}
+
+.scene-shade {
+  background: linear-gradient(180deg, rgb(11 16 13 / 0.3) 0%, transparent 35%, rgb(11 16 13 / 0.55) 100%);
+  opacity: 0.55;
+  transition: opacity 500ms ease;
+}
+
+.scene-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.85rem 0.4rem 0.7rem;
+  border-radius: 9999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #ffffff;
+  background: rgb(11 16 13 / 0.55);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.22);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.scene-badge-dot {
+  position: relative;
+  height: 0.5rem;
+  width: 0.5rem;
+  border-radius: 9999px;
+  background: #6fe07f;
+}
+
+.scene-badge-dot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: #6fe07f;
+  animation: scene-ping 1.8s ease-out infinite;
+}
+
+.scene-panel {
+  box-shadow: 0 10px 30px -18px rgb(11 16 13 / 0.6);
+  transition:
+    translate 450ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 450ms ease;
+}
+
+.scene-icon {
+  transition: transform 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.scene-more {
+  display: grid;
+  grid-template-rows: 1fr;
+}
+
+.scene-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-ink, #0b100d);
+  background: var(--color-brand-tint);
+  transition:
+    background-color 200ms ease,
+    transform 250ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.scene-chip:hover {
+  background: #d3f0df;
+  transform: translateY(-2px);
+}
+
+.scene-cta svg {
+  transition: transform 250ms ease;
+}
+
+.scene-cta:hover svg {
+  transform: translateX(4px);
+}
+
+.scene-hint {
+  display: none;
+}
+
+/* With a mouse the details stay tucked away until the card is hovered or focused;
+   on touch screens they are always open. */
+@media (hover: hover) {
+  .scene-hint {
+    display: inline-block;
+    transition: opacity 250ms ease;
+  }
+
+  .scene-more {
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 550ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .scene-chip,
+  .scene-cta {
+    opacity: 0;
+    translate: 0 10px;
+    transition:
+      opacity 350ms ease,
+      translate 450ms cubic-bezier(0.22, 1, 0.36, 1),
+      background-color 200ms ease,
+      transform 250ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .scene-card:is(:hover, :focus-within) {
+    box-shadow: 0 30px 60px -30px rgb(0 162 24 / 0.55);
+  }
+
+  .scene-card:is(:hover, :focus-within) .scene-photo {
+    scale: 1.08;
+  }
+
+  .scene-card:is(:hover, :focus-within) .scene-shade {
+    opacity: 1;
+  }
+
+  .scene-card:is(:hover, :focus-within) .scene-panel {
+    translate: 0 -6px;
+    box-shadow: 0 22px 44px -20px rgb(11 16 13 / 0.7);
+  }
+
+  .scene-card:is(:hover, :focus-within) .scene-icon {
+    transform: rotate(-12deg) scale(1.15);
+  }
+
+  .scene-card:is(:hover, :focus-within) .scene-hint {
+    opacity: 0;
+  }
+
+  .scene-card:is(:hover, :focus-within) .scene-more {
+    grid-template-rows: 1fr;
+  }
+
+  .scene-card:is(:hover, :focus-within) :is(.scene-chip, .scene-cta) {
+    opacity: 1;
+    translate: 0 0;
+    transition-delay: calc(120ms + var(--c, 6) * 60ms), calc(120ms + var(--c, 6) * 60ms), 0ms, 0ms;
+  }
+}
+
+@keyframes scene-ping {
+  0% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(3);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scene-card,
+  .scene-photo,
+  .scene-panel,
+  .scene-more,
+  .scene-chip,
+  .scene-cta,
+  .scene-icon {
+    transition: none;
+  }
+
+  .scene-badge-dot::after {
+    animation: none;
+  }
+}
+
 @keyframes spot-orbit {
   to {
     --spot-angle: 360deg;
@@ -801,12 +1054,78 @@ a {
   }
 }
 
-/* Floating login button (marketing pages). */
-.float-login {
-  position: fixed;
-  right: 1.25rem;
-  bottom: 1.25rem;
-  z-index: 60;
+/* Header navigation: plain links in the display font; each one lights up on hover. */
+.site-nav {
+  align-items: center;
+  gap: 0.125rem;
+}
+
+.site-nav-link {
+  position: relative;
+  isolation: isolate;
+  padding: 0.5rem 0.85rem;
+  border-radius: 9999px;
+  font-family: var(--font-display), Georgia, serif;
+  font-variation-settings: "SOFT" 100, "WONK" 0;
+  font-size: 1rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  line-height: 1.25;
+  white-space: nowrap;
+  color: var(--color-ink);
+  transition:
+    color 250ms ease,
+    transform 350ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Green-to-gold silk thread drawn under the hovered link. */
+.site-nav-link::after {
+  content: "";
+  position: absolute;
+  left: 0.85rem;
+  right: 0.85rem;
+  bottom: 0.3rem;
+  height: 1.5px;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, #1d8a3d, #e3b23c);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 450ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.site-nav-link:is(:hover, :focus-visible) {
+  color: #0b6b26;
+  transform: translateY(-1px);
+}
+
+.site-nav-link:is(:hover, :focus-visible)::after {
+  transform: scaleX(1);
+}
+
+@media (min-width: 1280px) {
+  .site-nav-link {
+    padding: 0.55rem 1.15rem;
+    font-size: 1.05rem;
+  }
+
+  .site-nav-link::after {
+    left: 1.15rem;
+    right: 1.15rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-nav-link,
+  .site-nav-link::after {
+    transition: none;
+  }
+}
+
+/* Animated login button in the site header. */
+.header-login {
+  position: relative;
+  isolation: isolate;
+  flex-shrink: 0;
   display: inline-flex;
   align-items: center;
   gap: 0.6rem;
@@ -819,23 +1138,23 @@ a {
   box-shadow:
     0 0 0 1.5px rgb(111 224 127 / 0.7),
     0 14px 30px -10px rgb(0 162 24 / 0.75);
-  animation: float-login-bob 3.2s ease-in-out infinite;
+  animation: header-login-bob 3.2s ease-in-out infinite;
   transition:
     transform 300ms cubic-bezier(0.34, 1.56, 0.64, 1),
     box-shadow 300ms ease;
 }
 
-.float-login::before {
+.header-login::before {
   content: "";
   position: absolute;
   inset: 0;
   z-index: -1;
   border-radius: inherit;
   border: 2px solid #6fe07f;
-  animation: float-login-ring 2.6s ease-out infinite;
+  animation: header-login-ring 2.6s ease-out infinite;
 }
 
-.float-login-icon {
+.header-login-icon {
   display: flex;
   height: 2.25rem;
   width: 2.25rem;
@@ -847,18 +1166,18 @@ a {
   transition: transform 350ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.float-login:hover {
+.header-login:hover {
   transform: scale(1.07);
   box-shadow:
     0 0 0 2px #6fe07f,
     0 18px 36px -10px rgb(0 162 24 / 0.95);
 }
 
-.float-login:hover .float-login-icon {
+.header-login:hover .header-login-icon {
   transform: translateX(3px) rotate(-8deg);
 }
 
-@keyframes float-login-bob {
+@keyframes header-login-bob {
   0%,
   100% {
     translate: 0 0;
@@ -868,7 +1187,7 @@ a {
   }
 }
 
-@keyframes float-login-ring {
+@keyframes header-login-ring {
   0% {
     transform: scale(1);
     opacity: 0.7;
@@ -881,12 +1200,12 @@ a {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .float-login,
-  .float-login::before {
+  .header-login,
+  .header-login::before {
     animation: none;
   }
 
-  .float-login::before {
+  .header-login::before {
     display: none;
   }
 }
@@ -941,6 +1260,87 @@ a {
   border-color: #00a218;
   background-color: #ffffff;
   box-shadow: 0 0 0 4px rgb(0 162 24 / 0.14);
+}
+
+/* Custom dropdown (demo form): the list always opens beneath its field. */
+.select-field {
+  position: relative;
+}
+
+.select-trigger {
+  width: 100%;
+  font-size: 0.95rem;
+  color: #101211;
+  cursor: pointer;
+  outline: none;
+}
+
+.select-trigger[data-open] {
+  border-color: #00a218;
+  background-color: #ffffff;
+  box-shadow: 0 0 0 4px rgb(0 162 24 / 0.14);
+}
+
+.select-chevron {
+  color: #6b716d;
+  transition: transform 250ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.select-trigger[data-open] .select-chevron {
+  color: #00a218;
+  transform: rotate(180deg);
+}
+
+.select-menu {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  left: 0;
+  right: 0;
+  z-index: 30;
+  padding: 0.35rem;
+  border-radius: 14px;
+  border: 1px solid #e5e5e6;
+  background: #ffffff;
+  box-shadow: 0 18px 40px -18px rgb(16 18 17 / 0.35);
+  transform-origin: top;
+  animation: select-open 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.select-option {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  color: #101211;
+  cursor: pointer;
+  transition: background-color 120ms ease;
+}
+
+.select-option[data-active] {
+  background: var(--color-brand-tint);
+}
+
+.select-option[aria-selected="true"] {
+  font-weight: 600;
+}
+
+@keyframes select-open {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .select-menu {
+    animation: none;
+  }
+
+  .select-chevron {
+    transition: none;
+  }
 }
 
 .login-input {
@@ -1056,23 +1456,16 @@ a {
   }
 }
 
-/* Draggable holders for the floating buttons: WhatsApp starts bottom left, Login bottom right. */
+/* Draggable holder for the floating WhatsApp button, which starts bottom left. */
 .float-slot {
   position: fixed;
+  left: 1.25rem;
   bottom: 1.25rem;
   z-index: 60;
   cursor: grab;
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
-}
-
-.float-slot-left {
-  left: 1.25rem;
-}
-
-.float-slot-right {
-  right: 1.25rem;
 }
 
 .float-slot[data-dragging] {
@@ -1085,7 +1478,6 @@ a {
   animation-play-state: paused;
 }
 
-.float-slot .float-login,
 .float-slot .float-whatsapp {
   position: relative;
   right: auto;

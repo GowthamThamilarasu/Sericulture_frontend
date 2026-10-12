@@ -2,10 +2,35 @@ import { useId } from "react";
 
 // Decorative pieces shared by the public pages. Styles live in globals.css (.accent, .eyebrow, .swash).
 
+// Where each glitter sparkle sits over the word, how big it is and when it twinkles.
+const glints = [
+  { left: "4%", top: "8%", size: "0.2em", delay: "0s" },
+  { left: "24%", top: "68%", size: "0.13em", delay: "1.1s" },
+  { left: "43%", top: "2%", size: "0.16em", delay: "0.5s" },
+  { left: "61%", top: "58%", size: "0.22em", delay: "1.7s" },
+  { left: "78%", top: "12%", size: "0.14em", delay: "0.8s" },
+  { left: "95%", top: "44%", size: "0.18em", delay: "2.2s" },
+];
+
 // A highlighted word or phrase inside a heading: calligraphic italic with a silk gradient.
-export function Accent({ children, tone = "green", swash = false }: { children: React.ReactNode; tone?: "green" | "gold" | "light"; swash?: boolean }) {
+// `glitter` adds a light sweep across the letters and twinkling sparkles (made for the gold tone).
+export function Accent({ children, tone = "green", swash = false, glitter = false }: { children: React.ReactNode; tone?: "green" | "gold" | "light"; swash?: boolean; glitter?: boolean }) {
   const toneClass = tone === "gold" ? "accent-gold" : tone === "light" ? "accent-light" : "";
-  return <em className={`accent ${toneClass} ${swash ? "swash" : ""}`}>{children}</em>;
+  return (
+    <em className={`accent ${toneClass} ${swash ? "swash" : ""} ${glitter ? "accent-glitter" : ""}`}>
+      {children}
+      {glitter
+        ? glints.map((glint) => (
+            <span
+              key={glint.left}
+              aria-hidden="true"
+              className="glint"
+              style={{ left: glint.left, top: glint.top, width: glint.size, height: glint.size, animationDelay: glint.delay }}
+            />
+          ))
+        : null}
+    </em>
+  );
 }
 
 function LeafMark({ className }: { className?: string }) {

@@ -1,6 +1,9 @@
-// WhatsApp number for the chat links: digits only, with country code and no "+" (for example 919876543210).
-// While this is empty the links open WhatsApp without a recipient, so set it before publishing.
-export const whatsappNumber = "";
+// Mobile number shown on the site, and the same number in the form a tel: link needs.
+export const contactPhone = "+91 96006 04590";
+export const contactPhoneHref = "tel:+919600604590";
+
+// WhatsApp number for the chat links: digits only, with country code and no "+".
+export const whatsappNumber = "919600604590";
 
 export const whatsappLink = (text: string) => `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(text)}`;
 

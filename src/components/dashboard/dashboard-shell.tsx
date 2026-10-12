@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { Bell, LogOut, Sprout } from "lucide-react";
+import { Bell, LogOut } from "lucide-react";
 
 import { DashboardMobileNav, DashboardNav } from "@/components/dashboard/dashboard-nav";
+import { Logo } from "@/components/logo";
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   return (
@@ -9,13 +10,8 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       <div className="flex min-h-screen">
         <aside className="hidden w-64 shrink-0 border-r border-white/10 bg-[#171918] p-5 text-[#c5cbc7] lg:block">
           <Link href="/" className="mb-8 flex items-center gap-3">
-            <div className="rounded-lg bg-[#3fbf5f]/20 p-2 text-[#3fbf5f]">
-              <Sprout className="h-5 w-5" />
-            </div>
-            <div>
-              <div className="text-lg font-semibold text-white">PAARI SERITECH</div>
-              <div className="text-[10px] uppercase tracking-[0.2em] text-[#8d948f]">Control Center</div>
-            </div>
+            <Logo plate className="h-20" />
+            <div className="text-[10px] uppercase tracking-[0.2em] text-[#8d948f]">Control Center</div>
           </Link>
 
           <DashboardNav />

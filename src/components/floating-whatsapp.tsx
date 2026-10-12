@@ -1,17 +1,15 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LogIn } from "lucide-react";
 
 import { WhatsAppIcon, whatsappGreeting, whatsappLink } from "@/lib/contact";
 
 const EDGE = 8;
 
-// Pins its child to a bottom corner and lets the visitor drag it anywhere on screen.
+// Pins its child to the bottom left corner and lets the visitor drag it anywhere on screen.
 // A drag never triggers the button underneath; a plain click or tap still does.
-function Draggable({ side, children }: { side: "left" | "right"; children: React.ReactNode }) {
+function Draggable({ children }: { children: React.ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
   const drag = useRef({ active: false, moved: false, startX: 0, startY: 0, baseX: 0, baseY: 0, x: 0, y: 0, minX: 0, maxX: 0, minY: 0, maxY: 0 });
 
@@ -48,7 +46,7 @@ function Draggable({ side, children }: { side: "left" | "right"; children: React
   return (
     <div
       ref={ref}
-      className={`float-slot float-slot-${side}`}
+      className="float-slot"
       onPointerDown={(event) => {
         if (event.pointerType === "mouse" && event.button !== 0) return;
         const d = drag.current;
@@ -94,35 +92,25 @@ function Draggable({ side, children }: { side: "left" | "right"; children: React
   );
 }
 
-// Floating WhatsApp (bottom left) and "Login" (bottom right) buttons on the public pages;
+// Floating WhatsApp button (bottom left) on the public pages;
 // hidden on the login page and inside the dashboard.
-export function FloatingLogin() {
+export function FloatingWhatsApp() {
   const pathname = usePathname();
   if (pathname.startsWith("/dashboard") || pathname.startsWith("/login")) return null;
 
   return (
-    <>
-      <Draggable side="left">
-        <a
-          href={whatsappLink(whatsappGreeting)}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="Chat on WhatsApp"
-          title="Chat on WhatsApp"
-          draggable={false}
-          className="float-whatsapp"
-        >
-          <WhatsAppIcon className="h-7 w-7 text-white" />
-        </a>
-      </Draggable>
-      <Draggable side="right">
-        <Link href="/login" draggable={false} className="float-login">
-          <span className="float-login-icon">
-            <LogIn className="h-4 w-4" />
-          </span>
-          Login
-        </Link>
-      </Draggable>
-    </>
+    <Draggable>
+      <a
+        href={whatsappLink(whatsappGreeting)}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Chat on WhatsApp"
+        title="Chat on WhatsApp"
+        draggable={false}
+        className="float-whatsapp"
+      >
+        <WhatsAppIcon className="h-7 w-7 text-white" />
+      </a>
+    </Draggable>
   );
 }

@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowLeft, Bell, Gauge, Info, Leaf, SlidersHorizontal } from "lucide-react";
+import { ArrowLeft, Bell, Gauge, Info, SlidersHorizontal } from "lucide-react";
 
 import { Accent } from "@/components/landing/flourish";
 import { contactEmail, siteShell } from "@/components/landing/landing-page";
 import { LoginForm } from "@/components/login-form";
+import { Logo } from "@/components/logo";
 
 export const metadata: Metadata = {
   title: "Log in | Paari Seritech",
@@ -29,13 +30,7 @@ export default function LoginPage() {
         <div aria-hidden="true" className="absolute inset-0 bg-[radial-gradient(90%_70%_at_0%_0%,rgba(63,191,95,0.35),transparent_60%),linear-gradient(180deg,rgba(11,16,13,0.55),#0b100d)]" />
 
         <Link href="/" className="relative flex items-center gap-3">
-          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-brand text-white">
-            <Leaf className="h-5 w-5" />
-          </span>
-          <span className="flex flex-col leading-none">
-            <span className="font-display text-2xl font-semibold">Paari</span>
-            <span className="mt-0.5 text-[10px] font-bold uppercase tracking-[0.42em] text-[#8ee59b]">Seritech</span>
-          </span>
+          <Logo plate className="h-28" />
         </Link>
 
         <div className="relative">
@@ -64,13 +59,7 @@ export default function LoginPage() {
           </Link>
 
           <div className="mt-8 flex items-center gap-3 lg:hidden">
-            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-brand text-white">
-              <Leaf className="h-5 w-5" />
-            </span>
-            <span className="flex flex-col leading-none text-ink">
-              <span className="font-display text-2xl font-semibold">Paari</span>
-              <span className="mt-0.5 text-[10px] font-bold uppercase tracking-[0.42em] text-brand">Seritech</span>
-            </span>
+            <Logo className="h-24" />
           </div>
 
           <h1 className="mt-8 font-display text-4xl font-bold tracking-[-0.015em] text-ink sm:text-[2.75rem]">Welcome <Accent>back</Accent></h1>

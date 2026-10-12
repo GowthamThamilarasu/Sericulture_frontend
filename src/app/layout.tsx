@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Fraunces, Manrope } from "next/font/google";
 import "./globals.css";
 
-import { FloatingLogin } from "@/components/floating-login";
+import { FloatingWhatsApp } from "@/components/floating-whatsapp";
 import { MothFollower } from "@/components/moth-follower";
 import { SpotEffects } from "@/components/spot-effects";
 
@@ -31,7 +31,7 @@ export default function RootLayout({
     <html lang="en" className={`${display.variable} ${sans.variable} h-full antialiased`}>
       <body className="min-h-full bg-white text-slate-900">
         {children}
-        <FloatingLogin />
+        <FloatingWhatsApp />
         <MothFollower />
         <SpotEffects />
       </body>

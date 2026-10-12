@@ -39,8 +39,8 @@ export function MobileNav({ links, email }: MobileNavProps) {
               </span>
               <span className="break-all">{email}</span>
             </a>
-            <Link href="/dashboard" onClick={close} className="mt-1 inline-flex items-center justify-center rounded-full bg-brand px-6 py-3 text-sm font-semibold text-white hover:bg-brand-dark">
-              View Demo
+            <Link href="/login" onClick={close} className="mt-1 inline-flex items-center justify-center rounded-full bg-brand px-6 py-3 text-sm font-semibold text-white hover:bg-brand-dark">
+              Login
             </Link>
           </nav>
         </div>

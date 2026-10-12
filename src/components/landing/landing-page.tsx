@@ -1,15 +1,16 @@
 import Link from "next/link";
-import { Activity, ArrowRight, BarChart3, Bell, Bug, CalendarClock, Camera, Check, ClipboardList, CloudSun, Cpu, Droplets, Fan, Gauge, Info, LayoutDashboard, LayoutGrid, Leaf, Lightbulb, Mail, MapPin, Play, Plug, Presentation, Radio, Settings2, ShieldCheck, SlidersHorizontal, Sprout, Target, ThermometerSun, TrendingUp, Warehouse, Wind, Wrench, Zap } from "lucide-react";
+import { Activity, ArrowRight, BarChart3, Bell, Bug, CalendarClock, Camera, Check, ClipboardList, CloudRain, CloudSun, Cpu, Droplets, Fan, FlaskConical, Gauge, Info, LayoutDashboard, LayoutGrid, Leaf, Lightbulb, LogIn, Mail, MapPin, Phone, Play, Plug, Presentation, Radio, Settings2, ShieldCheck, SlidersHorizontal, Sprout, Target, ThermometerSun, TrendingUp, Warehouse, Waves, Wind, Wrench, Zap } from "lucide-react";
 
+import { Logo as BrandLogo } from "@/components/logo";
 import { MobileNav } from "@/components/landing/mobile-nav";
-import { WhatsAppIcon, whatsappGreeting, whatsappLink } from "@/lib/contact";
+import { WhatsAppIcon, contactPhone, contactPhoneHref, whatsappGreeting, whatsappLink } from "@/lib/contact";
 import { RevealGroup } from "@/components/landing/reveal-group";
 import { Accent, Eyebrow, Flourish } from "@/components/landing/flourish";
 import { ProcessStory } from "@/components/landing/process-story";
 
 export const siteShell = "overflow-x-clip bg-white font-sans text-ink";
 
-export const contactEmail = "hello@saaram.ai";
+export const contactEmail = "info@saaram.co.in";
 
 const images = {
   heroVisual: "/landing/hero-visual.jpg",
@@ -63,6 +64,16 @@ const platformScenes = [
     caption: "Soil, water and weather sensing across every row of your mulberry farm.",
     image: images.farmField,
     alt: "Paari Seritech soil sensor and weather station in a mulberry field",
+    badge: "Field sensing",
+    points: [
+      { text: "Soil moisture", icon: Droplets },
+      { text: "Soil pH & EC", icon: FlaskConical },
+      { text: "Soil temperature", icon: ThermometerSun },
+      { text: "Rainfall", icon: CloudRain },
+      { text: "Weather station", icon: CloudSun },
+      { text: "Tank level & flow", icon: Waves },
+    ],
+    cta: "Explore field sensors",
   },
   {
     label: "In the shed",
@@ -70,6 +81,16 @@ const platformScenes = [
     caption: "Temperature, humidity, CO₂ and ammonia tracked through every rearing stage.",
     image: images.rearingShed,
     alt: "Paari Seritech sensor and climate display in a silkworm rearing shed",
+    badge: "Shed climate",
+    points: [
+      { text: "Temperature", icon: ThermometerSun },
+      { text: "Humidity", icon: Droplets },
+      { text: "CO₂", icon: Wind },
+      { text: "Ammonia (NH₃)", icon: FlaskConical },
+      { text: "Light & door status", icon: Lightbulb },
+      { text: "Fan & heater control", icon: Fan },
+    ],
+    cta: "Explore shed hardware",
   },
 ];
 
@@ -108,6 +129,8 @@ type Level = {
   body: string;
   image: string;
   icon: typeof Activity;
+  badge: string;
+  highlights: { text: string; icon: typeof Activity }[];
   groups: { title?: string; icon?: typeof Activity; items: string[] }[];
   note?: string;
   idealFor?: string;
@@ -122,6 +145,13 @@ const levels: Level[] = [
     body: "Start with connected sensing and real-time dashboards that bring critical agricultural and rearing parameters into one place.",
     image: images.sensors,
     icon: Activity,
+    badge: "See everything",
+    highlights: [
+      { text: "Live dashboards", icon: LayoutDashboard },
+      { text: "Soil & water readings", icon: Droplets },
+      { text: "Threshold alerts", icon: Bell },
+      { text: "Historical trends", icon: TrendingUp },
+    ],
     groups: [
       {
         items: [
@@ -146,6 +176,13 @@ const levels: Level[] = [
     body: "Connect compatible pumps, valves, fans, humidifiers, heaters, and other supported equipment to configured control logic. Automate routine operations using predefined thresholds and operating rules.",
     image: images.shed,
     icon: SlidersHorizontal,
+    badge: "Runs by rules",
+    highlights: [
+      { text: "Fans & ventilation", icon: Fan },
+      { text: "Cooling control", icon: ThermometerSun },
+      { text: "Humidity management", icon: Droplets },
+      { text: "Heater & lighting", icon: Lightbulb },
+    ],
     groups: [
       {
         title: "Farm automation",
@@ -183,6 +220,13 @@ const levels: Level[] = [
     body: "Build on sensor readings, historical records, crop stages, and environmental trends to develop intelligent recommendations for cultivation and silkworm rearing.",
     image: images.mulberry,
     icon: Cpu,
+    badge: "Learns from data",
+    highlights: [
+      { text: "Irrigation prediction", icon: CloudSun },
+      { text: "Leaf condition", icon: Leaf },
+      { text: "Risk-zone assessment", icon: ShieldCheck },
+      { text: "Trend analysis", icon: BarChart3 },
+    ],
     groups: [
       {
         title: "AI for mulberry cultivation",
@@ -301,6 +345,7 @@ const navLinks = [
 
 const contactDetails = [
   { label: "Email", value: contactEmail, href: `mailto:${contactEmail}`, icon: Mail },
+  { label: "Mobile", value: contactPhone, href: contactPhoneHref, icon: Phone },
   { label: "Location", value: "Tamil Nadu, India", icon: MapPin },
 ];
 
@@ -365,27 +410,21 @@ export function FeaturePanel({
 
 function Logo({ light }: { light?: boolean }) {
   return (
-    <Link href="/" className="flex shrink-0 items-center gap-2.5">
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand text-white">
-        <Leaf className="h-4 w-4" />
-      </div>
-      <div className={`flex flex-col leading-none ${light ? "text-white" : "text-ink"}`}>
-        <span className="font-display text-[1.35rem] font-semibold tracking-[-0.01em] sm:text-2xl">Paari</span>
-        <span className={`mt-0.5 text-[9px] font-bold uppercase tracking-[0.42em] sm:text-[10px] ${light ? "text-[#8ee59b]" : "text-brand"}`}>Seritech</span>
-      </div>
+    <Link href="/" aria-label="Paari Seritech home" className="flex shrink-0 items-center">
+      <BrandLogo plate={light} className={light ? "h-24" : "h-14 sm:h-16"} />
     </Link>
   );
 }
 
 export function SiteHeader() {
   return (
-    <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-xl">
+    <header className="sticky top-0 z-50 bg-white/70 backdrop-blur-xl backdrop-saturate-150">
       <div className={`${container} flex items-center justify-between gap-4 py-3 sm:py-4`}>
         <div className="flex min-w-0 items-center gap-6 xl:gap-8">
           <Logo />
-          <nav className="hidden items-center gap-6 border-l border-line pl-6 text-sm font-medium text-ink lg:flex xl:gap-8 xl:pl-8">
+          <nav className="site-nav hidden lg:flex">
             {navLinks.map((link) => (
-              <a key={link.href} href={link.href} className="hover:text-brand">{link.label}</a>
+              <a key={link.href} href={link.href} className="site-nav-link">{link.label}</a>
             ))}
           </nav>
         </div>
@@ -397,8 +436,11 @@ export function SiteHeader() {
             </span>
             <span className="hidden xl:inline">{contactEmail}</span>
           </a>
-          <Link href="/dashboard" className={`${pillGreen} max-sm:hidden`}>
-            <LayoutDashboard className="h-4 w-4" /> View Demo
+          <Link href="/login" className="header-login">
+            <span className="header-login-icon">
+              <LogIn className="h-4 w-4" />
+            </span>
+            Login
           </Link>
           <MobileNav links={navLinks} email={contactEmail} />
         </div>
@@ -482,7 +524,7 @@ export function LandingPage() {
                   From <Accent>Green Leaf</Accent>
                 </span>
                 <span className="block">
-                  to <Accent tone="gold" swash>Golden Silk</Accent>
+                  to <Accent tone="gold" swash glitter>Golden Silk</Accent>
                 </span>
               </h1>
               <p className="mt-6 max-w-lg text-lg leading-relaxed text-ink-soft">
@@ -573,28 +615,45 @@ export function LandingPage() {
             </p>
           </div>
 
-          <div className="mt-8 grid gap-4 sm:mt-12 md:grid-cols-2 lg:gap-6">
-            {platformScenes.map((scene) => (
-              <div key={scene.label} className="relative flex aspect-[4/5] items-end overflow-hidden rounded-[20px] sm:aspect-[5/4]">
-                <Photo src={scene.image} label={scene.alt} className="absolute inset-0" />
-                <div className="relative m-4 w-full rounded-2xl bg-white px-5 py-4 sm:m-5 sm:px-6 sm:py-5">
+          <RevealGroup className="mt-8 grid gap-4 sm:mt-12 md:grid-cols-2 lg:gap-6">
+            {platformScenes.map((scene, index) => (
+              <div key={scene.label} className="scene-card relative flex aspect-[4/5] items-end overflow-hidden rounded-[20px] sm:aspect-[5/4]" style={{ "--i": index } as React.CSSProperties}>
+                <Photo src={scene.image} label={scene.alt} className="scene-photo absolute inset-0" />
+                <div aria-hidden="true" className="scene-shade absolute inset-0" />
+                <div className="scene-badge absolute left-4 top-4 sm:left-5 sm:top-5">
+                  <span className="scene-badge-dot" />
+                  {scene.badge}
+                </div>
+                <div className="scene-panel relative m-4 w-full rounded-2xl bg-white px-5 py-4 sm:m-5 sm:px-6 sm:py-5">
                   <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-brand">
-                    <span className="flex h-7 w-7 items-center justify-center rounded-full bg-brand text-white">
+                    <span className="scene-icon flex h-7 w-7 items-center justify-center rounded-full bg-brand text-white">
                       <scene.icon className="h-3.5 w-3.5" />
                     </span>
                     {scene.label}
+                    <span aria-hidden="true" className="scene-hint ml-auto rounded-full bg-brand-tint px-2.5 py-1 text-[10px] tracking-[0.12em]">
+                      +{scene.points.length} tracked
+                    </span>
                   </div>
                   <p className="mt-2 font-display text-lg leading-snug text-ink sm:text-xl lg:text-[1.4rem]">{scene.caption}</p>
+                  <div className="scene-more">
+                    <div className="min-h-0 overflow-hidden">
+                      <ul className="flex flex-wrap gap-2 pt-4">
+                        {scene.points.map((point, pointIndex) => (
+                          <li key={point.text} className="scene-chip" style={{ "--c": pointIndex } as React.CSSProperties}>
+                            <point.icon className="h-3.5 w-3.5 shrink-0 text-brand" />
+                            {point.text}
+                          </li>
+                        ))}
+                      </ul>
+                      <Link href="/products" className="scene-cta mt-4 inline-flex items-center gap-2 text-sm font-semibold text-brand hover:text-brand-dark">
+                        {scene.cta} <ArrowRight className="h-4 w-4" />
+                      </Link>
+                    </div>
+                  </div>
                 </div>
               </div>
             ))}
-          </div>
-
-          <div className="mt-8 flex justify-center">
-            <Link href="/dashboard" className={`${pillGreen} w-full sm:w-auto`}>
-              View Live Demo <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
+          </RevealGroup>
 
           <RevealGroup className="mt-8 grid gap-5 sm:mt-10 sm:grid-cols-2 xl:grid-cols-4">
             {platformCards.map((item, index) => (
@@ -624,17 +683,36 @@ export function LandingPage() {
           <div className="mt-10 space-y-14 sm:mt-14 lg:space-y-16">
             {levels.map((level, index) => (
               <div key={level.number} className={`grid items-start gap-8 lg:gap-14 ${index % 2 === 1 ? "lg:grid-cols-[7fr_5fr]" : "lg:grid-cols-[5fr_7fr]"}`}>
-                <div className={`relative flex min-h-[390px] items-end overflow-hidden rounded-[20px] sm:min-h-[430px] lg:sticky lg:top-24 lg:min-h-[440px] ${index % 2 === 1 ? "lg:order-2" : ""}`}>
-                  <Photo src={level.image} label={`${level.name} level`} className="absolute inset-0" />
-                  <div className="absolute left-5 top-5 rounded-xl bg-white px-4 py-1.5 font-display text-2xl font-bold italic text-brand [font-variation-settings:'SOFT'_100,'WONK'_1]">{level.number}</div>
-                  <div className="relative m-5 w-full rounded-2xl bg-white px-6 pb-6 pt-9 text-center">
-                    <div className="absolute -top-6 left-1/2 flex h-12 w-12 -translate-x-1/2 items-center justify-center rounded-full border-4 border-white bg-brand text-white">
-                      <level.icon className="h-5 w-5" />
+                <RevealGroup className={`lg:sticky lg:top-24 ${index % 2 === 1 ? "lg:order-2" : ""}`}>
+                  <div className="scene-card relative flex min-h-[390px] items-end overflow-hidden rounded-[20px] sm:min-h-[430px] lg:min-h-[440px]">
+                    <Photo src={level.image} label={`${level.name} level`} className="scene-photo absolute inset-0" />
+                    <div aria-hidden="true" className="scene-shade absolute inset-0" />
+                    <div className="absolute left-5 top-5 rounded-xl bg-white px-4 py-1.5 font-display text-2xl font-bold italic text-brand [font-variation-settings:'SOFT'_100,'WONK'_1]">{level.number}</div>
+                    <div className="scene-badge absolute right-5 top-5">
+                      <span className="scene-badge-dot" />
+                      {level.badge}
                     </div>
-                    <h3 className="font-display text-[1.75rem] font-bold text-ink">{level.name}</h3>
-                    <div className="mt-4 border-t border-line pt-4 text-[15px] text-ink-soft">{level.tagline}</div>
+                    <div className="scene-panel relative m-5 w-full rounded-2xl bg-white px-6 pb-6 pt-9 text-center">
+                      <div className="scene-icon absolute -top-6 left-1/2 flex h-12 w-12 -translate-x-1/2 items-center justify-center rounded-full border-4 border-white bg-brand text-white">
+                        <level.icon className="h-5 w-5" />
+                      </div>
+                      <h3 className="font-display text-[1.75rem] font-bold text-ink">{level.name}</h3>
+                      <div className="mt-4 border-t border-line pt-4 text-[15px] text-ink-soft">{level.tagline}</div>
+                      <div className="scene-more">
+                        <div className="min-h-0 overflow-hidden">
+                          <ul className="flex flex-wrap justify-center gap-2 pt-4">
+                            {level.highlights.map((point, pointIndex) => (
+                              <li key={point.text} className="scene-chip" style={{ "--c": pointIndex } as React.CSSProperties}>
+                                <point.icon className="h-3.5 w-3.5 shrink-0 text-brand" />
+                                {point.text}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                </div>
+                </RevealGroup>
 
                 <div>
                   <p className="font-display text-[1.4rem] font-light leading-snug text-ink sm:text-[1.7rem] lg:text-[2.1rem]">{level.lead}</p>
@@ -709,9 +787,6 @@ export function LandingPage() {
               <div className="mt-8">
                 <FeaturePanel items={dashboardPoints.map((item) => ({ text: item.title, detail: item.detail, icon: item.icon }))} />
               </div>
-              <Link href="/dashboard" className={`${pillGreen} mt-9 w-full sm:w-auto`}>
-                View Live Demo <ArrowRight className="h-4 w-4" />
-              </Link>
             </div>
           </div>
         </section>
