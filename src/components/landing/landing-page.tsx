@@ -339,7 +339,6 @@ const navLinks = [
   { href: "/products", label: "Products" },
   { href: "/#levels", label: "Levels" },
   { href: "/#engineering", label: "Engineering" },
-  { href: "/#dashboard", label: "Dashboard" },
   { href: "#contact", label: "Contact" },
 ];
 

@@ -1,9 +1,11 @@
-import type { AIInsight, AlertItem, Actuator, CameraAnalysis, Farm, FarmPlot, FertigationSession, InstarStage, IrrigationSession, MulberryPlot, Sensor, Shed, SilkwormBatch } from "@/types";
+import type { AIInsight, AlertItem, Actuator, CameraAnalysis, DoorSensor, Farm, FarmPlot, FarmValve, FertigationReading, FertigationSession, InstarStage, IrrigationSession, MulberryPlot, Sensor, Shed, SilkwormBatch } from "@/types";
 
 export const demoFarm: Farm = {
   id: "farm-1",
   name: "Kallakurichi Mulberry Cluster",
   location: "Tamil Nadu, India",
+  latitude: 11.7383,
+  longitude: 78.962,
   acres: 46,
   climate: "Semi-arid, irrigated",
 };
@@ -111,6 +113,25 @@ export const irrigationSessions: IrrigationSession[] = [
 export const fertigationSessions: FertigationSession[] = [
   { id: "f1", recipe: "Agronomist approved nutrient blend", ecTarget: 1.05, dose: 84, status: "Ready" },
   { id: "f2", recipe: "Balanced nutrient infusion", ecTarget: 1.02, dose: 76, status: "Scheduled" },
+];
+
+export const doorSensor: DoorSensor = { location: "Shed A1 main door", state: "Closed", since: "08:42", openedToday: 6 };
+
+export const farmValves: FarmValve[] = [
+  { id: "v1", name: "Valve 1", zone: "Block A", flowRate: 30, volume: 420, infinite: false, delivered: 126, open: true },
+  { id: "v2", name: "Valve 2", zone: "Block B", flowRate: 30, volume: 390, infinite: false, delivered: 0, open: false },
+  { id: "v3", name: "Valve 3", zone: "Block C", flowRate: 25, volume: 350, infinite: false, delivered: 0, open: false },
+  { id: "v4", name: "Valve 4", zone: "Nursery", flowRate: 12, volume: 100, infinite: true, delivered: 0, open: false },
+];
+
+// Nutrient solution readings; TDS follows EC (ppm ≈ EC mS/cm × 640).
+export const fertigationReadings: FertigationReading[] = [
+  { key: "ph", label: "pH", name: "Water pH", unit: "", value: 6.4, min: 5.8, max: 6.8, decimals: 1 },
+  { key: "tds", label: "TDS", name: "Total dissolved solids", unit: "ppm", value: 653, min: 575, max: 770, decimals: 0 },
+  { key: "ec", label: "EC", name: "Electrical conductivity", unit: "mS/cm", value: 1.02, min: 0.9, max: 1.2, decimals: 2 },
+  { key: "n", label: "N", name: "Nitrogen", unit: "ppm", value: 148, min: 120, max: 180, decimals: 0 },
+  { key: "p", label: "P", name: "Phosphorus", unit: "ppm", value: 46, min: 35, max: 60, decimals: 0 },
+  { key: "k", label: "K", name: "Potassium", unit: "ppm", value: 182, min: 150, max: 220, decimals: 0 },
 ];
 
 export const cameraAnalyses: CameraAnalysis[] = [

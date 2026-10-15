@@ -190,6 +190,94 @@ a {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
+/* Dashboard theme tokens (toggled in components/dashboard/dashboard-theme.tsx). Dark is the default. */
+.dash-theme {
+  --d-page: #111312;
+  --d-panel: #1e201f;
+  --d-side: #171918;
+  --d-card: #232524;
+  --d-card-border: transparent;
+  --d-inset: #2c2f2d;
+  --d-banner: #1e201f;
+  --d-popup: #232524;
+  --d-text: #ffffff;
+  --d-soft: #c5cbc7;
+  --d-muted: #9aa09c;
+  --d-line: rgb(255 255 255 / 0.1);
+  --d-chip: rgb(255 255 255 / 0.1);
+  --d-chip-hover: rgb(255 255 255 / 0.2);
+  --d-accent: #3fbf5f;
+  --d-on-accent: #0d140f;
+  --d-accent-soft: rgb(63 191 95 / 0.15);
+  --d-warn: #f5b942;
+  --d-warn-soft: rgb(245 185 66 / 0.15);
+  --d-danger-text: #ff9c9c;
+  --d-danger-soft: rgb(239 90 90 / 0.15);
+  --d-danger: #ef5a5a;
+  --d-info: #7fb4ff;
+  --d-track: #555856;
+  background-color: var(--d-page);
+  color: var(--d-text);
+  color-scheme: dark;
+}
+
+/* Light theme uses the website palette (tailwind.config.ts: brand, brand-tint, ink, mist, line). */
+.dash-theme[data-theme="light"] {
+  --d-page: #ffffff;
+  --d-panel: #ffffff;
+  --d-side: #ffffff;
+  --d-card: #f2f2f2;
+  --d-card-border: transparent;
+  --d-inset: #ffffff;
+  --d-banner: #eaf8f2;
+  --d-popup: #ffffff;
+  --d-text: #101211;
+  --d-soft: #363a38;
+  --d-muted: #686d6a;
+  --d-line: #e5e5e6;
+  --d-chip: rgb(16 18 17 / 0.06);
+  --d-chip-hover: #eaf8f2;
+  --d-accent: #00a218;
+  --d-on-accent: #ffffff;
+  --d-accent-soft: #eaf8f2;
+  --d-warn: #b45309;
+  --d-warn-soft: rgb(180 83 9 / 0.12);
+  --d-danger-text: #c62828;
+  --d-danger-soft: rgb(220 38 38 / 0.1);
+  --d-danger: #dc2626;
+  --d-info: #2563eb;
+  --d-track: #cfd4d0;
+  color-scheme: light;
+}
+
+/* Notification popups (components/dashboard/notifications.tsx). */
+@keyframes alarm-flash {
+  0%,
+  100% {
+    background-color: rgb(69 10 10 / 0.45);
+  }
+  50% {
+    background-color: rgb(127 29 29 / 0.6);
+  }
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .toast-enter {
+    animation: toast-in 240ms ease-out;
+  }
+}
+
 /* Dark theme for every dashboard page: remaps the light palette inside the dashboard shell. */
 .dash-dark {
   --color-slate-50: #2c2f2d;

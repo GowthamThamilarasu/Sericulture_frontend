@@ -9,8 +9,42 @@ export interface Farm {
   id: string;
   name: string;
   location: string;
+  latitude: number;
+  longitude: number;
   acres: number;
   climate: string;
+}
+
+/** Door contact sensor: reports only whether the door is open or closed. */
+export interface DoorSensor {
+  location: string;
+  state: "Open" | "Closed";
+  since: string;
+  openedToday: number;
+}
+
+/** One irrigation valve. Volume is in litres; when infinite the valve runs until it is closed. */
+export interface FarmValve {
+  id: string;
+  name: string;
+  zone: string;
+  flowRate: number; // litres per minute
+  volume: number;
+  infinite: boolean;
+  delivered: number;
+  open: boolean;
+}
+
+/** A fertigation water-quality reading with its target range. */
+export interface FertigationReading {
+  key: "ph" | "tds" | "ec" | "n" | "p" | "k";
+  label: string;
+  name: string;
+  unit: string;
+  value: number;
+  min: number;
+  max: number;
+  decimals: number;
 }
 
 export interface FarmPlot {

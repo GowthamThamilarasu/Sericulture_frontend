@@ -40,7 +40,7 @@ export function DashboardNav({ onNavigate }: { onNavigate?: () => void }) {
             aria-current={active ? "page" : undefined}
             className={cn(
               "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
-              active ? "bg-[#3fbf5f] font-semibold text-[#0d140f]" : "text-[#c5cbc7] hover:bg-white/10 hover:text-white",
+              active ? "bg-[var(--d-accent)] font-semibold text-[var(--d-on-accent)]" : "text-[var(--d-soft)] hover:bg-[var(--d-chip)] hover:text-[var(--d-text)]",
             )}
           >
             <item.icon className="h-4 w-4" />
@@ -48,11 +48,11 @@ export function DashboardNav({ onNavigate }: { onNavigate?: () => void }) {
           </Link>
         );
       })}
-      <div className="!mt-4 border-t border-white/10 pt-4">
+      <div className="!mt-4 border-t border-[var(--d-line)] pt-4">
         <Link
           href="/login"
           onClick={onNavigate}
-          className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-[#ff9c9c] transition-colors hover:bg-[#ef5a5a]/15 hover:text-white"
+          className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-[var(--d-danger-text)] transition-colors hover:bg-[var(--d-danger-soft)]"
         >
           <LogOut className="h-4 w-4" />
           <span>Log out</span>
@@ -72,12 +72,12 @@ export function DashboardMobileNav() {
         aria-label={open ? "Close menu" : "Open menu"}
         aria-expanded={open}
         onClick={() => setOpen((value) => !value)}
-        className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/10 text-white hover:bg-white/20"
+        className="flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--d-chip)] text-[var(--d-text)] hover:bg-[var(--d-chip-hover)]"
       >
         {open ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
       </button>
       {open ? (
-        <div className="absolute inset-x-0 top-full z-40 max-h-[75vh] overflow-y-auto border-t border-white/10 bg-[#171918] p-4 shadow-xl">
+        <div className="absolute inset-x-0 top-full z-40 max-h-[75vh] overflow-y-auto border-t border-[var(--d-line)] bg-[var(--d-side)] p-4 shadow-xl">
           <DashboardNav onNavigate={() => setOpen(false)} />
         </div>
       ) : null}

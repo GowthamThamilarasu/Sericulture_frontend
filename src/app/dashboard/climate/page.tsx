@@ -2,6 +2,7 @@
 
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
+import { ModeSelector } from "@/components/dashboard/controller-mode";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { temperatureHistory } from "@/data/mock";
 
@@ -36,18 +37,10 @@ export default function ClimatePage() {
       </Card>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {[
-          ["Fan Stage 1", "AUTO"],
-          ["Fan Stage 2", "AUTO"],
-          ["Circulation Fan", "AUTO"],
-          ["Fogger", "MANUAL"],
-          ["Humidifier", "AUTO"],
-          ["Heater", "OFF"],
-          ["Cooling", "OFF"],
-          ["Light", "18 Lux"],
-        ].map(([label, value]) => (
-          <Card key={label}><CardContent className="p-4"><div className="text-xs uppercase tracking-[0.18em] text-slate-500">{label}</div><div className="mt-3 text-xl font-semibold text-slate-900">{value}</div></CardContent></Card>
+        {["Fan Stage 1", "Fan Stage 2", "Circulation Fan", "Fogger", "Humidifier", "Heater", "Cooling"].map((label) => (
+          <Card key={label}><CardContent className="flex items-center justify-between gap-3 p-4"><div className="text-xs uppercase tracking-[0.18em] text-slate-500">{label}</div><ModeSelector name={label} /></CardContent></Card>
         ))}
+        <Card><CardContent className="p-4"><div className="text-xs uppercase tracking-[0.18em] text-slate-500">Light</div><div className="mt-3 text-xl font-semibold text-slate-900">18 Lux</div></CardContent></Card>
       </div>
     </div>
   );

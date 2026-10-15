@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import { ModeSelector } from "@/components/dashboard/controller-mode";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const controlCards: Array<[string, string[]]> = [
@@ -26,11 +26,7 @@ export default function AutomationCenterPage() {
                 <div key={item} className="rounded-xl border border-slate-200 bg-slate-50 p-3">
                   <div className="flex items-center justify-between gap-3">
                     <div className="text-sm font-medium text-slate-900">{item}</div>
-                    <Button variant="outline" size="sm">Manual</Button>
-                  </div>
-                  <div className="mt-3 flex items-center justify-between text-xs uppercase tracking-[0.15em] text-slate-500">
-                    <span>Status</span>
-                    <span className="text-slate-900">AUTO</span>
+                    <ModeSelector name={item} />
                   </div>
                   <div className="mt-1 flex items-center justify-between text-xs uppercase tracking-[0.15em] text-slate-500">
                     <span>Last Action</span>
