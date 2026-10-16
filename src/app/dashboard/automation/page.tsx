@@ -1,43 +1,84 @@
-import { ModeSelector } from "@/components/dashboard/controller-mode";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+"use client";
 
-const controlCards: Array<[string, string[]]> = [
-  ["IRRIGATION", ["Water Pump", "Solenoid Valve", "Drip Irrigation"]],
-  ["FERTIGATION", ["Dose Pump", "Mixing Tank", "Agitator", "Tank Filling Valve"]],
-  ["SHED", ["Exhaust Fans", "Circulation Fans", "Foggers", "Humidifier", "Heater", "Cooling", "Motorized Ventilation", "Lights", "Curtains", "Louvers"]],
+import { Beaker, Blinds, CloudDrizzle, Droplets, Fan, Faucet, FlaskConical, Heater, Lightbulb, PanelTop, RotateCw, Snowflake, Warehouse, Waves, Wind, Zap } from "lucide-react";
+
+import { controllerModes, useControllerModes } from "@/components/dashboard/controller-mode";
+import { type Icon, Widget } from "@/components/dashboard/dashboard-widgets";
+import { SectionHeader } from "@/components/dashboard/monitor-widgets";
+import { ControlRow, DashboardPage, PageHeader, StatTile } from "@/components/dashboard/page-kit";
+import { WaterLevelIcon } from "@/components/dashboard/sensor-icons";
+
+const groups: { group: string; icon: Icon; items: { name: string; icon: Icon }[] }[] = [
+  {
+    group: "Irrigation",
+    icon: Waves,
+    items: [
+      { name: "Water Pump", icon: Waves },
+      { name: "Solenoid Valve", icon: Faucet },
+      { name: "Drip Irrigation", icon: Droplets },
+    ],
+  },
+  {
+    group: "Fertigation",
+    icon: FlaskConical,
+    items: [
+      { name: "Dose Pump", icon: FlaskConical },
+      { name: "Mixing Tank", icon: Beaker },
+      { name: "Agitator", icon: RotateCw },
+      { name: "Tank Filling Valve", icon: WaterLevelIcon },
+    ],
+  },
+  {
+    group: "Shed",
+    icon: Warehouse,
+    items: [
+      { name: "Exhaust Fans", icon: Fan },
+      { name: "Circulation Fans", icon: Wind },
+      { name: "Foggers", icon: CloudDrizzle },
+      { name: "Humidifier", icon: CloudDrizzle },
+      { name: "Heater", icon: Heater },
+      { name: "Cooling", icon: Snowflake },
+      { name: "Motorized Ventilation", icon: PanelTop },
+      { name: "Lights", icon: Lightbulb },
+      { name: "Curtains", icon: Blinds },
+      { name: "Louvers", icon: Blinds },
+    ],
+  },
 ];
 
-export default function AutomationCenterPage() {
-  return (
-    <div className="space-y-6">
-      <div>
-        <div className="text-xs uppercase tracking-[0.2em] text-slate-500">Automation Center</div>
-        <h1 className="mt-2 text-3xl font-semibold text-slate-900">Review and approve automation actions</h1>
-      </div>
+const allDevices = groups.flatMap((group) => group.items.map((item) => item.name));
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        {controlCards.map(([group, items]) => (
-          <Card key={group}>
-            <CardHeader>
-              <CardTitle>{group}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {items.map((item) => (
-                <div key={item} className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="text-sm font-medium text-slate-900">{item}</div>
-                    <ModeSelector name={item} />
-                  </div>
-                  <div className="mt-1 flex items-center justify-between text-xs uppercase tracking-[0.15em] text-slate-500">
-                    <span>Last Action</span>
-                    <span className="text-slate-900">2h ago</span>
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    </div>
+export default function AutomationCenterPage() {
+  const modes = useControllerModes(allDevices);
+  const counts = Object.fromEntries(controllerModes.map((mode) => [mode.value, modes.filter((value) => value === mode.value).length]));
+
+  return (
+    <DashboardPage tint="slate">
+      <PageHeader icon={Zap} eyebrow="Automation Center" title="Review and approve automation actions" detail={`${allDevices.length} controllable devices across the farm and shed`} />
+
+      <section aria-label="Mode summary">
+        <SectionHeader icon={Zap} title="Control Modes" detail="How many devices run in each mode" />
+        <div className="grid gap-4 sm:grid-cols-3">
+          {controllerModes.map((mode) => (
+            <StatTile key={mode.value} label={mode.label} value={counts[mode.value]} unit="devices" icon={mode.icon} tone={mode.value === "manual" ? "warn" : "accent"} note={mode.detail} />
+          ))}
+        </div>
+      </section>
+
+      <section aria-label="Devices">
+        <SectionHeader icon={Fan} title="Devices" detail="Choose how each device is run: Auto, Semi or Manual" />
+        <div className="grid items-start gap-4 lg:grid-cols-3">
+          {groups.map((group) => (
+            <Widget key={group.group} title={group.group} icon={group.icon}>
+              <div className="space-y-3">
+                {group.items.map((item) => (
+                  <ControlRow key={item.name} name={item.name} icon={item.icon} status="Last action 2h ago" />
+                ))}
+              </div>
+            </Widget>
+          ))}
+        </div>
+      </section>
+    </DashboardPage>
   );
 }

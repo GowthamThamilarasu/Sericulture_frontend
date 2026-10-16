@@ -1,33 +1,42 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+"use client";
+
+import { Bug, Camera, CircleDot, Egg, Leaf, ScanEye } from "lucide-react";
+
+import { type Icon, Widget } from "@/components/dashboard/dashboard-widgets";
+import { SectionHeader } from "@/components/dashboard/monitor-widgets";
+import { DashboardPage, PageHeader, Pill } from "@/components/dashboard/page-kit";
 import { cameraAnalyses } from "@/data/mock";
+
+const cameraIcons: Record<string, Icon> = { Silkworm: Bug, Mulberry: Leaf, Cocoon: Egg };
 
 export default function CamerasPage() {
   return (
-    <div className="space-y-6">
-      <div>
-        <div className="text-xs uppercase tracking-[0.2em] text-slate-500">Cameras / Computer Vision</div>
-        <h1 className="mt-2 text-3xl font-semibold text-slate-900">AI Computer Vision • Future Module</h1>
-      </div>
+    <DashboardPage tint="slate">
+      <PageHeader icon={Camera} eyebrow="Cameras / Computer Vision" title="AI computer vision" detail="Camera analysis for silkworms, mulberry and cocoons" badge="Future Module" />
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        {cameraAnalyses.map((camera) => (
-          <Card key={camera.id}>
-            <CardHeader>
-              <CardTitle>{camera.name}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="mb-4 flex h-44 items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50 text-xs uppercase tracking-[0.18em] text-slate-500">
-                {camera.status}
-              </div>
-              <ul className="space-y-2 text-sm text-slate-600">
-                {camera.metrics.map((metric) => (
-                  <li key={metric} className="flex gap-2"><span className="mt-1.5 h-2 w-2 rounded-full bg-indigo-500" /> {metric}</li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    </div>
+      <section aria-label="Camera modules">
+        <SectionHeader icon={ScanEye} title="Vision Modules" detail="What each camera will measure once installed" />
+        <div className="grid items-start gap-4 lg:grid-cols-3">
+          {cameraAnalyses.map((camera) => {
+            const CameraIcon = cameraIcons[camera.name] ?? Camera;
+            return (
+              <Widget key={camera.id} title={camera.name} icon={CameraIcon} action={<Pill tone="info">{camera.status}</Pill>}>
+                <div className="mb-4 flex h-40 flex-col items-center justify-center gap-2 rounded-md border border-dashed border-[var(--d-line)] bg-[var(--d-inset)] text-[var(--d-muted)]">
+                  <Camera className="h-8 w-8" aria-hidden="true" />
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.18em]">No feed connected</span>
+                </div>
+                <ul className="space-y-2">
+                  {camera.metrics.map((metric) => (
+                    <li key={metric} className="flex items-center gap-2 text-sm text-[var(--d-soft)]">
+                      <CircleDot className="h-3.5 w-3.5 shrink-0 text-[var(--d-accent)]" aria-hidden="true" /> {metric}
+                    </li>
+                  ))}
+                </ul>
+              </Widget>
+            );
+          })}
+        </div>
+      </section>
+    </DashboardPage>
   );
 }

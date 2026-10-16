@@ -1,8 +1,8 @@
-import type { AIInsight, AlertItem, Actuator, CameraAnalysis, DoorSensor, Farm, FarmPlot, FarmValve, FertigationReading, FertigationSession, InstarStage, IrrigationSession, MulberryPlot, Sensor, Shed, SilkwormBatch } from "@/types";
+import type { AIInsight, AlertItem, Actuator, CameraAnalysis, DoorSensor, Farm, FarmPlot, FarmValve, FertigationReading, FertigationSession, InstarStage, IrrigationSchedule, IrrigationSession, MulberryPlot, PhaseReading, Sensor, Shed, SilkwormBatch, VolumeSettings } from "@/types";
 
 export const demoFarm: Farm = {
   id: "farm-1",
-  name: "Kallakurichi Mulberry Cluster",
+  name: "Kallakurichi Mulberry Center",
   location: "Tamil Nadu, India",
   latitude: 11.7383,
   longitude: 78.962,
@@ -151,3 +151,33 @@ export const knowledgeSections = {
   silkworm: ["Multivoltine", "Bivoltine", "Bivoltine hybrids", "Multivoltine × Bivoltine hybrids", "Improved hybrids"],
   tamilNadu: ["Pure Mysore", "CSR2", "CSR4", "CSR2 × CSR4", "PM × CSR2", "PM × CSR4"],
 };
+
+export const irrigationSchedules: IrrigationSchedule[] = [
+  { id: "sch-1", valveId: "v1", start: "06:00", days: ["Mon", "Wed", "Fri"], limit: "volume", volume: 420, duration: 15, enabled: true },
+  { id: "sch-2", valveId: "v2", start: "06:30", days: ["Tue", "Thu", "Sat"], limit: "volume", volume: 390, duration: 14, enabled: true },
+  { id: "sch-3", valveId: "v3", start: "17:30", days: ["Mon", "Thu"], limit: "duration", volume: 350, duration: 14, enabled: false },
+  { id: "sch-4", valveId: "v4", start: "07:00", days: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"], limit: "duration", volume: 100, duration: 8, enabled: true },
+];
+
+export const volumeSettings: VolumeSettings = {
+  dailyBudget: 1600,
+  perCycle: { v1: 420, v2: 390, v3: 350, v4: 100 },
+  tankReserve: 30,
+  maxFlow: 90,
+};
+
+// Pump panel supply: 415 V line / 240 V phase nominal, motor running near 5 HP.
+export const phaseReadings: PhaseReading[] = [
+  { phase: "R", voltage: 236.4, current: 6.2, powerFactor: 0.86 },
+  { phase: "Y", voltage: 233.1, current: 6.0, powerFactor: 0.85 },
+  { phase: "B", voltage: 238.2, current: 6.4, powerFactor: 0.86 },
+];
+
+// Energy used by the pump panel in each hour today (kWh).
+export const powerHistory = [
+  { time: "05:00", value: 0.2 }, { time: "06:00", value: 3.4 }, { time: "07:00", value: 3.1 }, { time: "08:00", value: 1.2 }, { time: "09:00", value: 0.3 }, { time: "10:00", value: 0.2 },
+  { time: "11:00", value: 0.2 }, { time: "12:00", value: 0.3 }, { time: "13:00", value: 0.2 }, { time: "14:00", value: 0.2 }, { time: "15:00", value: 0.4 }, { time: "16:00", value: 0.3 },
+  { time: "17:00", value: 2.9 }, { time: "18:00", value: 1.6 },
+];
+
+export const pumpProtection = { runHoursToday: 2.6, runHoursTotal: 1842, starts: 4, lastTrip: "None in 30 days" };

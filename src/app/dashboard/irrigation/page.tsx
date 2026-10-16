@@ -1,74 +1,70 @@
 "use client";
 
-import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { useState } from "react";
+import { CalendarClock, CheckCircle2, ChartLine, Clock, Droplets, Gauge, History, Target, Waves } from "lucide-react";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Widget } from "@/components/dashboard/dashboard-widgets";
+import { SectionHeader, SetpointPanel, farmSetpoints, reading } from "@/components/dashboard/monitor-widgets";
+import { DashboardPage, InfoRow, PageHeader, Pill, StatTile, TrendChart } from "@/components/dashboard/page-kit";
+import { SoilMoistureIcon } from "@/components/dashboard/sensor-icons";
+import { ValveControl } from "@/components/dashboard/valve-control";
 import { irrigationHistory, irrigationSessions } from "@/data/mock";
 
 export default function IrrigationPage() {
+  const [setpoints, setSetpoints] = useState(() => Object.fromEntries(farmSetpoints.map((item) => [item.key, item.value])));
+  const soil = reading("Soil Moisture");
+
   return (
-    <div className="space-y-6">
-      <div>
-        <div className="text-xs uppercase tracking-[0.2em] text-slate-500">Irrigation</div>
-        <h1 className="mt-2 text-3xl font-semibold text-slate-900">Water delivery and schedule control</h1>
-      </div>
+    <DashboardPage tint="water">
+      <PageHeader icon={Waves} eyebrow="Irrigation" title="Water delivery and schedule control" detail="Pump, field valves and soil moisture targets" />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Card><CardContent className="p-4"><div className="text-xs uppercase tracking-[0.18em] text-slate-500">Current Soil Moisture</div><div className="mt-3 text-2xl font-semibold">31%</div></CardContent></Card>
-        <Card><CardContent className="p-4"><div className="text-xs uppercase tracking-[0.18em] text-slate-500">Target Moisture</div><div className="mt-3 text-2xl font-semibold">35%</div></CardContent></Card>
-        <Card><CardContent className="p-4"><div className="text-xs uppercase tracking-[0.18em] text-slate-500">Pump Status</div><div className="mt-3 text-2xl font-semibold">OFF</div></CardContent></Card>
-        <Card><CardContent className="p-4"><div className="text-xs uppercase tracking-[0.18em] text-slate-500">Valve Status</div><div className="mt-3 text-2xl font-semibold">CLOSED</div></CardContent></Card>
-      </div>
+      <section aria-label="Irrigation status">
+        <SectionHeader icon={Gauge} title="Status" detail="Where the field is against its moisture target" />
+        <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
+          <StatTile label="Soil Moisture" value={soil?.value ?? "–"} unit="%" icon={SoilMoistureIcon} note={soil?.location} />
+          <StatTile label="Target Moisture" value={setpoints.soil} unit="%" icon={Target} note="From the set point below" />
+          <StatTile label="Flow" value="4.1" unit="L/min" icon={Gauge} />
+          <StatTile label="Next Recommended" value="17:45" icon={CalendarClock} tone="info" note="Today" />
+        </div>
+      </section>
 
-      <div className="grid gap-6 lg:grid-cols-[1.4fr_0.6fr]">
-        <Card>
-          <CardHeader><CardTitle>Irrigation History</CardTitle></CardHeader>
-          <CardContent className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={irrigationHistory}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                <XAxis dataKey="time" tickLine={false} axisLine={false} />
-                <YAxis tickLine={false} axisLine={false} />
-                <Tooltip />
-                <Area dataKey="value" stroke="#0ea5e9" fill="#e0f2fe" strokeWidth={2.2} />
-              </AreaChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+      <section aria-label="Irrigation controls">
+        <SectionHeader icon={Droplets} title="Controls" detail="Run the pump and valves, and set the targets automation works to" />
+        <div className="grid items-start gap-4 xl:grid-cols-3">
+          <ValveControl className="xl:col-span-2" />
+          <SetpointPanel items={farmSetpoints} values={setpoints} onChange={(key, value) => setSetpoints((current) => ({ ...current, [key]: value }))} />
+        </div>
+      </section>
 
-        <Card>
-          <CardHeader><CardTitle>Session Summary</CardTitle></CardHeader>
-          <CardContent className="space-y-3">
-            {[
-              ["Flow", "4.1 L/min"],
-              ["Water Used", "420 L"],
-              ["Last Irrigation", "08:15"],
-              ["Next Recommended", "Today 17:45"],
-            ].map(([label, value]) => (
-              <div key={label} className="flex items-center justify-between border-b border-slate-100 pb-2 last:border-b-0">
-                <span className="text-sm text-slate-600">{label}</span>
-                <span className="text-sm font-semibold text-slate-900">{value}</span>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card>
-        <CardHeader><CardTitle>Recent irrigation sessions</CardTitle></CardHeader>
-        <CardContent>
-          <div className="grid gap-3 md:grid-cols-3">
-            {irrigationSessions.map((session) => (
-              <div key={session.id} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                <div className="text-xs uppercase tracking-[0.2em] text-slate-500">{session.start}</div>
-                <div className="mt-4 text-xl font-semibold text-slate-900">{session.duration}</div>
-                <div className="mt-2 text-sm text-slate-600">{session.waterUsed} L</div>
-                <div className="mt-3 text-xs uppercase tracking-[0.15em] text-emerald-700">{session.status}</div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+      <section aria-label="Irrigation history">
+        <SectionHeader icon={ChartLine} title="History" detail="Today's soil moisture and recent irrigation runs" />
+        <div className="grid items-start gap-4 lg:grid-cols-[1.4fr_1fr]">
+          <TrendChart id="irrigationMoisture" title="Soil Moisture" unit="%" data={irrigationHistory} tone="info" icon={SoilMoistureIcon} />
+          <Widget title="Session Summary" icon={Clock}>
+            <InfoRow label="Flow" value="4.1 L/min" icon={Gauge} />
+            <InfoRow label="Water used today" value="420 L" icon={Droplets} />
+            <InfoRow label="Last irrigation" value="08:15" icon={History} />
+            <InfoRow label="Next recommended" value="Today 17:45" icon={CalendarClock} tone="info" />
+          </Widget>
+          <Widget title="Recent Sessions" icon={History} className="lg:col-span-2">
+            <div className="grid gap-3 md:grid-cols-3">
+              {irrigationSessions.map((session) => (
+                <div key={session.id} className="rounded-md bg-[var(--d-inset)] p-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="text-[10px] uppercase tracking-[0.15em] text-[var(--d-muted)]">{session.start}</div>
+                    <Pill>
+                      <CheckCircle2 className="mr-1 h-3 w-3" aria-hidden="true" />
+                      {session.status}
+                    </Pill>
+                  </div>
+                  <div className="mt-2 text-xl font-bold text-[var(--d-accent)]">{session.duration}</div>
+                  <div className="text-xs text-[var(--d-muted)]">{session.waterUsed} L delivered</div>
+                </div>
+              ))}
+            </div>
+          </Widget>
+        </div>
+      </section>
+    </DashboardPage>
   );
 }

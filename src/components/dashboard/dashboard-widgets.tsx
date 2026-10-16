@@ -3,21 +3,22 @@
 import { ChartLine } from "lucide-react";
 
 import { type HistoryParam, useOpenHistory } from "@/components/dashboard/history-dialog";
+import { type Tint, tintClass } from "@/components/dashboard/tints";
 
 // Building blocks shared by the dashboard overview panels. Colors come from the .dash-theme tokens in globals.css.
 
 export type Icon = React.ComponentType<{ className?: string; style?: React.CSSProperties; "aria-hidden"?: boolean | "true" | "false" }>;
 
 // With `history`, clicking the card body opens that reading's history window.
-export function Widget({ title, icon: Icon, action, className, children, history }: { title: string; icon?: Icon; action?: React.ReactNode; className?: string; children: React.ReactNode; history?: HistoryParam }) {
+export function Widget({ title, icon: Icon, action, className, children, history, tint }: { title: string; icon?: Icon; action?: React.ReactNode; className?: string; children: React.ReactNode; history?: HistoryParam; tint?: Tint | null }) {
   const openHistory = useOpenHistory();
   const hint = history && <ChartLine className="h-4 w-4 shrink-0 text-[var(--d-muted)]" aria-hidden="true" />;
 
   return (
-    <section className={`flex flex-col overflow-hidden rounded-lg border border-[var(--d-card-border)] bg-[var(--d-card)] ${className ?? ""}`}>
+    <section className={`flex flex-col overflow-hidden rounded-lg dash-card border border-[var(--d-card-border)] bg-[var(--d-card)] ${tintClass(Icon, tint)} ${className ?? ""}`}>
       <div className="flex items-center justify-between gap-3 px-4 pb-2 pt-3">
         <h2 className="flex min-w-0 items-center gap-2 text-[15px] font-semibold text-[var(--d-text)]">
-          {Icon && <Icon className="h-4 w-4 shrink-0" style={{ color: "var(--d-accent)" }} aria-hidden="true" />}
+          {Icon && <Icon className="h-4 w-4 shrink-0" style={{ color: "var(--d-tint, var(--d-accent))" }} aria-hidden="true" />}
           <span className="truncate">{title}</span>
         </h2>
         {action ?? hint}

@@ -58,6 +58,12 @@ export function useControllerMode(name: string): ControllerMode {
   return saved[name] ?? defaultMode(name);
 }
 
+// Modes for a list of controllers at once.
+export function useControllerModes(names: string[]): ControllerMode[] {
+  const saved = useSyncExternalStore(subscribe, loadModes, () => emptyModes);
+  return names.map((name) => saved[name] ?? defaultMode(name));
+}
+
 export function ModeSelector({ name, className }: { name: string; className?: string }) {
   const mode = useControllerMode(name);
   const current = controllerModes.find((item) => item.value === mode) ?? controllerModes[0];

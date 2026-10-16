@@ -1,43 +1,93 @@
 "use client";
 
+import { AlertTriangle, Bell, BellOff, Bot, Check, CircleAlert, Clock, Info, MapPin, RotateCcw, WifiOff } from "lucide-react";
+
+import { type Icon } from "@/components/dashboard/dashboard-widgets";
+import { SectionHeader } from "@/components/dashboard/monitor-widgets";
 import { setNotificationState, useNotifications } from "@/components/dashboard/notifications";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DashboardPage, PageHeader, Pill, StatTile, type Tone, buttonPrimary, buttonSecondary, toneColor } from "@/components/dashboard/page-kit";
+
+const severity: Record<string, { tone: Tone; icon: Icon }> = {
+  Warning: { tone: "warn", icon: AlertTriangle },
+  "Sensor Failure": { tone: "danger", icon: WifiOff },
+  Information: { tone: "info", icon: Info },
+  "AI Recommendation": { tone: "accent", icon: Bot },
+};
 
 export default function AlertsPage() {
   const { items } = useNotifications();
+  const open = items.filter((alert) => alert.state === "new").length;
 
   return (
-    <div className="space-y-6">
-      <div>
-        <div className="text-xs uppercase tracking-[0.2em] text-slate-500">Alert Center</div>
-        <h1 className="mt-2 text-3xl font-semibold text-slate-900">Monitoring and alert response</h1>
-      </div>
+    <DashboardPage tint="alert">
+      <PageHeader icon={Bell} eyebrow="Alert Center" title="Monitoring and alert response" detail="Mark alerts read once handled, or ignore ones that need no action" />
 
-      <div className="grid gap-4">
-        {items.map((alert) => (
-          <Card key={alert.id} className={alert.state === "new" ? "" : "opacity-60"}>
-            <CardHeader>
-              <div className="flex items-center justify-between gap-3">
-                <CardTitle>{alert.parameter}</CardTitle>
-                <span className="rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-[10px] uppercase tracking-[0.16em] text-red-700">{alert.severity}</span>
-              </div>
-            </CardHeader>
-            <CardContent className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
-              <div><div className="text-[10px] uppercase tracking-[0.18em] text-slate-500">Value</div><div className="mt-1 text-sm font-semibold text-slate-900">{alert.value}</div></div>
-              <div><div className="text-[10px] uppercase tracking-[0.18em] text-slate-500">Timestamp</div><div className="mt-1 text-sm font-semibold text-slate-900">{alert.timestamp}</div></div>
-              <div><div className="text-[10px] uppercase tracking-[0.18em] text-slate-500">Location</div><div className="mt-1 text-sm font-semibold text-slate-900">{alert.location}</div></div>
-              <div><div className="text-[10px] uppercase tracking-[0.18em] text-slate-500">Recommended Action</div><div className="mt-1 text-sm text-slate-700">{alert.recommendedAction}</div></div>
-              <div><div className="text-[10px] uppercase tracking-[0.18em] text-slate-500">Status</div><div className="mt-1 text-sm font-semibold text-slate-900">{alert.state === "new" ? alert.status : alert.state === "read" ? "Read" : "Ignored"}</div>
-                <div className="mt-2 flex gap-2">
-                  {alert.state !== "read" && <button type="button" onClick={() => setNotificationState(alert.id, "read")} className="rounded-md bg-emerald-700 px-2.5 py-1 text-xs font-semibold text-white hover:bg-emerald-800">Read</button>}
-                  {alert.state === "new" && <button type="button" onClick={() => setNotificationState(alert.id, "ignored")} className="rounded-md border border-slate-200 px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50">Ignore</button>}
-                  {alert.state !== "new" && <button type="button" onClick={() => setNotificationState(alert.id, "new")} className="rounded-md border border-slate-200 px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50">Mark unread</button>}
+      <section aria-label="Alert summary">
+        <SectionHeader icon={CircleAlert} title="Summary" detail="Alerts from the farm and shed sensors" />
+        <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
+          <StatTile label="Open" value={open} icon={Bell} tone={open ? "warn" : "accent"} />
+          <StatTile label="Read" value={items.filter((alert) => alert.state === "read").length} icon={Check} />
+          <StatTile label="Ignored" value={items.filter((alert) => alert.state === "ignored").length} icon={BellOff} tone="muted" />
+          <StatTile label="Sensor Failures" value={items.filter((alert) => alert.severity === "Sensor Failure").length} icon={WifiOff} tone="danger" />
+        </div>
+      </section>
+
+      <section aria-label="Alerts">
+        <SectionHeader icon={AlertTriangle} title="Alerts" detail="Newest first" />
+        <div className="space-y-3">
+          {items.map((alert) => {
+            const { tone, icon: SeverityIcon } = severity[alert.severity] ?? { tone: "muted" as Tone, icon: Info };
+            return (
+              <article
+                key={alert.id}
+                className={`rounded-lg dash-card border border-[var(--d-card-border)] bg-[var(--d-card)] p-4 ${alert.state === "new" ? "" : "opacity-60"}`}
+                style={{ borderLeft: `4px solid ${toneColor[tone]}` }}
+              >
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="flex items-start gap-3">
+                    <SeverityIcon className="mt-0.5 h-5 w-5 shrink-0" style={{ color: toneColor[tone] }} aria-hidden="true" />
+                    <div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h2 className="text-base font-semibold text-[var(--d-text)]">
+                          {alert.parameter}: {alert.value}
+                        </h2>
+                        <Pill tone={tone}>{alert.severity}</Pill>
+                      </div>
+                      <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[var(--d-muted)]">
+                        <span className="inline-flex items-center gap-1">
+                          <Clock className="h-3.5 w-3.5" aria-hidden="true" /> {alert.timestamp}
+                        </span>
+                        <span className="inline-flex items-center gap-1">
+                          <MapPin className="h-3.5 w-3.5" aria-hidden="true" /> {alert.location}
+                        </span>
+                        <span>{alert.state === "new" ? alert.status : alert.state === "read" ? "Read" : "Ignored"}</span>
+                      </div>
+                      <p className="mt-2 text-sm text-[var(--d-soft)]">{alert.recommendedAction}</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    {alert.state !== "read" && (
+                      <button type="button" onClick={() => setNotificationState(alert.id, "read")} className={buttonPrimary}>
+                        <Check className="h-3.5 w-3.5" aria-hidden="true" /> Read
+                      </button>
+                    )}
+                    {alert.state === "new" && (
+                      <button type="button" onClick={() => setNotificationState(alert.id, "ignored")} className={buttonSecondary}>
+                        <BellOff className="h-3.5 w-3.5" aria-hidden="true" /> Ignore
+                      </button>
+                    )}
+                    {alert.state !== "new" && (
+                      <button type="button" onClick={() => setNotificationState(alert.id, "new")} className={buttonSecondary}>
+                        <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" /> Mark unread
+                      </button>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    </div>
+              </article>
+            );
+          })}
+        </div>
+      </section>
+    </DashboardPage>
   );
 }

@@ -5,6 +5,7 @@ import { DashboardMobileNav, DashboardNav } from "@/components/dashboard/dashboa
 import { DashboardThemeRoot, ThemeToggle } from "@/components/dashboard/dashboard-theme";
 import { NotificationBell, NotificationPopups } from "@/components/dashboard/notifications";
 import { Logo } from "@/components/logo";
+import { demoFarm } from "@/data/mock";
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   return (
@@ -23,9 +24,9 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           <header className="relative flex items-center justify-between gap-3 border-b border-[var(--d-line)] bg-[var(--d-panel)] px-4 py-3 text-[var(--d-text)] md:px-6">
             <div className="flex min-w-0 items-center gap-3">
               <DashboardMobileNav />
-              <div className="flex items-center gap-2">
+              <div className="flex min-w-0 items-center gap-2">
                 <span className="text-sm font-medium text-[var(--d-muted)]">Farm</span>
-                <span className="rounded-full bg-[var(--d-accent-soft)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--d-accent)]">Kallakurichi</span>
+                <span className="truncate rounded-full bg-[var(--d-accent-soft)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--d-accent)]">{demoFarm.name}</span>
               </div>
               <div className="hidden items-center gap-2 md:flex">
                 <span className="text-sm font-medium text-[var(--d-muted)]">Shed</span>

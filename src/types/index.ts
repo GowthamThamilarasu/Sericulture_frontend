@@ -176,3 +176,33 @@ export interface InstarStage {
   humidity: string;
   description: string;
 }
+
+export type Weekday = "Mon" | "Tue" | "Wed" | "Thu" | "Fri" | "Sat" | "Sun";
+
+/** A timed irrigation run for one valve: stops after `volume` litres or `duration` minutes. */
+export interface IrrigationSchedule {
+  id: string;
+  valveId: string;
+  start: string; // "HH:MM", 24-hour
+  days: Weekday[];
+  limit: "volume" | "duration";
+  volume: number; // litres
+  duration: number; // minutes
+  enabled: boolean;
+}
+
+/** Water volume limits that the scheduler and automation work within. */
+export interface VolumeSettings {
+  dailyBudget: number; // litres per day across all valves
+  perCycle: Record<string, number>; // default litres per run, by valve id
+  tankReserve: number; // % of tank kept back; irrigation stops below it
+  maxFlow: number; // L/min the pump line can carry
+}
+
+/** One phase of the 3-phase supply to the pump panel. */
+export interface PhaseReading {
+  phase: "R" | "Y" | "B";
+  voltage: number; // phase-to-neutral volts
+  current: number; // amps
+  powerFactor: number;
+}

@@ -21,6 +21,7 @@ import {
   Plus,
   Radio,
   Router,
+  Settings as SettingsIcon,
   ShieldCheck,
   Smartphone,
   Sprout,
@@ -35,8 +36,10 @@ import {
   X,
 } from "lucide-react";
 
+import { DashboardPage, PageHeader } from "@/components/dashboard/page-kit";
+
 // Matches the palette of the main dashboard page.
-const green = "#3fbf5f";
+const green = "var(--d-accent)";
 
 // Demo mode: settings and devices are kept in this browser only.
 const storageKey = "paari-settings-v1";
@@ -142,14 +145,14 @@ const typeIcon = (type: string) => deviceTypes.find((item) => item.name === type
 const connections = ["Wi-Fi", "LoRaWAN", "Zigbee", "Bluetooth", "Ethernet", "Modbus RS-485", "4G / SIM"];
 
 const inputClass =
-  "h-11 w-full rounded-xl border border-white/10 bg-[#1a1c1b] px-3.5 text-sm text-white placeholder:text-[#6f7672] outline-none transition focus:border-[#3fbf5f] focus:ring-4 focus:ring-[#3fbf5f]/15";
+  "h-11 w-full rounded-xl border border-[var(--d-line)] bg-[var(--d-inset)] px-3.5 text-sm text-[var(--d-text)] placeholder:text-[var(--d-muted)] outline-none transition focus:border-[var(--d-accent)] focus:ring-4 focus:ring-[var(--d-accent-soft)]";
 
 function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-[13px] font-medium text-[#c5cbc7]">{label}</span>
+      <span className="mb-2 block text-[13px] font-medium text-[var(--d-soft)]">{label}</span>
       {children}
-      {hint && <span className="mt-1.5 block text-xs text-[#8d948f]">{hint}</span>}
+      {hint && <span className="mt-1.5 block text-xs text-[var(--d-muted)]">{hint}</span>}
     </label>
   );
 }
@@ -165,7 +168,7 @@ function TextInput({ value, onChange, type = "text", suffix, placeholder, requir
         onChange={(event) => onChange(event.target.value)}
         className={`${inputClass} ${suffix ? "pr-16" : ""}`}
       />
-      {suffix && <span className="pointer-events-none absolute inset-y-0 right-3.5 flex items-center text-xs font-medium text-[#8d948f]">{suffix}</span>}
+      {suffix && <span className="pointer-events-none absolute inset-y-0 right-3.5 flex items-center text-xs font-medium text-[var(--d-muted)]">{suffix}</span>}
     </div>
   );
 }
@@ -178,20 +181,20 @@ function Select({ value, onChange, options }: { value: string; onChange: (value:
           <option key={option}>{option}</option>
         ))}
       </select>
-      <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8d948f]" />
+      <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--d-muted)]" />
     </div>
   );
 }
 
 function Segmented({ value, onChange, options }: { value: string; onChange: (value: string) => void; options: string[] }) {
   return (
-    <div className="flex flex-wrap gap-1 rounded-xl border border-white/10 bg-[#1a1c1b] p-1">
+    <div className="flex flex-wrap gap-1 rounded-xl border border-[var(--d-line)] bg-[var(--d-inset)] p-1">
       {options.map((option) => (
         <button
           key={option}
           type="button"
           onClick={() => onChange(option)}
-          className={`flex-1 rounded-lg px-3 py-2 text-sm font-medium transition ${value === option ? "bg-[#3fbf5f] text-[#0d140f] shadow" : "text-[#9aa09c] hover:text-white"}`}
+          className={`flex-1 rounded-lg px-3 py-2 text-sm font-medium transition ${value === option ? "bg-[var(--d-accent)] text-[var(--d-on-accent)] shadow" : "text-[var(--d-muted)] hover:text-[var(--d-text)]"}`}
         >
           {option}
         </button>
@@ -208,7 +211,7 @@ function Switch({ on, onChange, label }: { on: boolean; onChange: () => void; la
       aria-checked={on}
       aria-label={label}
       onClick={onChange}
-      className={`relative h-7 w-12 shrink-0 rounded-full transition-colors ${on ? "bg-[#3fbf5f]" : "bg-[#4a4d4b]"}`}
+      className={`relative h-7 w-12 shrink-0 rounded-full transition-colors ${on ? "bg-[var(--d-accent)]" : "bg-[var(--d-track)]"}`}
     >
       <span className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow transition-all ${on ? "left-6" : "left-1"}`} />
     </button>
@@ -217,14 +220,14 @@ function Switch({ on, onChange, label }: { on: boolean; onChange: () => void; la
 
 function Panel({ icon: Icon, title, description, children }: { icon: typeof Cpu; title: string; description: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-2xl border border-white/[0.06] bg-[#232524] p-5 sm:p-6">
+    <section className="dash-card rounded-2xl border border-[var(--d-card-border)] bg-[var(--d-card)] p-5 sm:p-6">
       <div className="mb-6 flex items-start gap-3.5">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#3fbf5f]/15 text-[#3fbf5f]">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--d-accent-soft)] text-[var(--d-accent)]">
           <Icon className="h-5 w-5" />
         </span>
         <div>
-          <h2 className="text-base font-semibold text-white">{title}</h2>
-          <p className="mt-0.5 text-sm text-[#9aa09c]">{description}</p>
+          <h2 className="text-base font-semibold text-[var(--d-text)]">{title}</h2>
+          <p className="mt-0.5 text-sm text-[var(--d-muted)]">{description}</p>
         </div>
       </div>
       {children}
@@ -234,14 +237,14 @@ function Panel({ icon: Icon, title, description, children }: { icon: typeof Cpu;
 
 function RangeCard({ icon: Icon, label, unit, min, max, onMin, onMax }: { icon: typeof Cpu; label: string; unit: string; min: string; max: string; onMin: (value: string) => void; onMax: (value: string) => void }) {
   return (
-    <div className="rounded-xl border border-white/[0.06] bg-[#1a1c1b] p-4">
+    <div className="rounded-xl border border-[var(--d-line)] bg-[var(--d-inset)] p-4">
       <div className="flex items-center justify-between">
-        <span className="flex items-center gap-2 text-sm font-medium text-[#c5cbc7]">
-          <Icon className="h-4 w-4 text-[#3fbf5f]" /> {label}
+        <span className="flex items-center gap-2 text-sm font-medium text-[var(--d-soft)]">
+          <Icon className="h-4 w-4 text-[var(--d-accent)]" /> {label}
         </span>
-        <span className="text-sm font-semibold text-white">
+        <span className="text-sm font-semibold text-[var(--d-text)]">
           {min}–{max}
-          <span className="ml-1 text-xs font-normal text-[#8d948f]">{unit}</span>
+          <span className="ml-1 text-xs font-normal text-[var(--d-muted)]">{unit}</span>
         </span>
       </div>
       <div className="mt-3 grid grid-cols-2 gap-2">
@@ -331,12 +334,8 @@ function SettingsView() {
   const online = devices.filter((device) => device.online).length;
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 pb-24 [color-scheme:dark]">
-      <div>
-        <div className="text-xs font-semibold uppercase tracking-[0.2em] text-[#3fbf5f]">Settings</div>
-        <h1 className="mt-2 text-2xl font-semibold text-white sm:text-3xl">Farm, shed &amp; device configuration</h1>
-        <p className="mt-2 text-sm text-[#9aa09c]">Set up your farm once. Alerts, automation and reports use these values.</p>
-      </div>
+    <DashboardPage tint="slate">
+      <PageHeader icon={SettingsIcon} eyebrow="Settings" title="Farm, shed & device configuration" detail="Set up your farm once. Alerts, automation and reports use these values." badge={null} />
 
       <Tabs.Root defaultValue="farm" orientation="vertical" className="grid gap-6 lg:grid-cols-[240px_1fr]">
         <Tabs.List className="flex gap-2 overflow-x-auto pb-1 lg:sticky lg:top-6 lg:flex-col lg:self-start lg:overflow-visible lg:pb-0">
@@ -344,14 +343,14 @@ function SettingsView() {
             <Tabs.Trigger
               key={tab.value}
               value={tab.value}
-              className="group flex shrink-0 items-center gap-3 rounded-xl border border-transparent px-3 py-2.5 text-left transition hover:bg-white/[0.04] data-[state=active]:border-white/[0.06] data-[state=active]:bg-[#232524]"
+              className="group flex shrink-0 items-center gap-3 rounded-xl border border-transparent px-3 py-2.5 text-left transition hover:bg-[var(--d-chip-hover)] data-[state=active]:border-[var(--d-line)] data-[state=active]:bg-[var(--d-card)]"
             >
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/[0.06] text-[#9aa09c] transition group-data-[state=active]:bg-[#3fbf5f] group-data-[state=active]:text-[#0d140f]">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--d-chip)] text-[var(--d-muted)] transition group-data-[state=active]:bg-[var(--d-accent)] group-data-[state=active]:text-[var(--d-on-accent)]">
                 <tab.icon className="h-[18px] w-[18px]" />
               </span>
               <span>
-                <span className="block text-sm font-medium text-[#c5cbc7] group-data-[state=active]:text-white">{tab.label}</span>
-                <span className="hidden text-xs text-[#8d948f] lg:block">{tab.detail}</span>
+                <span className="block text-sm font-medium text-[var(--d-soft)] group-data-[state=active]:text-[var(--d-text)]">{tab.label}</span>
+                <span className="hidden text-xs text-[var(--d-muted)] lg:block">{tab.detail}</span>
               </span>
             </Tabs.Trigger>
           ))}
@@ -413,22 +412,22 @@ function SettingsView() {
           <Tabs.Content value="devices" className="space-y-6 outline-none">
             <div className="grid grid-cols-3 gap-3">
               {[
-                { label: "Total devices", value: devices.length, color: "#ffffff" },
+                { label: "Total devices", value: devices.length, color: "var(--d-text)" },
                 { label: "Online", value: online, color: green },
-                { label: "Offline", value: devices.length - online, color: "#f5b942" },
+                { label: "Offline", value: devices.length - online, color: "var(--d-warn)" },
               ].map((stat) => (
-                <div key={stat.label} className="rounded-2xl border border-white/[0.06] bg-[#232524] p-4">
-                  <div className="text-xs text-[#9aa09c]">{stat.label}</div>
+                <div key={stat.label} className="dash-card rounded-2xl border border-[var(--d-card-border)] bg-[var(--d-card)] p-4">
+                  <div className="text-xs text-[var(--d-muted)]">{stat.label}</div>
                   <div className="mt-1 text-2xl font-semibold" style={{ color: stat.color }}>{stat.value}</div>
                 </div>
               ))}
             </div>
 
-            <section className="rounded-2xl border border-white/[0.06] bg-[#232524] p-5 sm:p-6">
+            <section className="dash-card rounded-2xl border border-[var(--d-card-border)] bg-[var(--d-card)] p-5 sm:p-6">
               <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <h2 className="text-base font-semibold text-white">Connected devices</h2>
-                  <p className="mt-0.5 text-sm text-[#9aa09c]">Sensors, cameras and controllers linked to this farm.</p>
+                  <h2 className="text-base font-semibold text-[var(--d-text)]">Connected devices</h2>
+                  <p className="mt-0.5 text-sm text-[var(--d-muted)]">Sensors, cameras and controllers linked to this farm.</p>
                 </div>
                 <AddDeviceDialog
                   locations={[shed.name, "Mulberry Plot 1", "Mulberry Plot 2", "Leaf storage room", "Pump house"]}
@@ -437,37 +436,37 @@ function SettingsView() {
               </div>
 
               {devices.length === 0 ? (
-                <div className="rounded-xl border border-dashed border-white/15 p-10 text-center">
-                  <Cpu className="mx-auto h-8 w-8 text-[#6f7672]" />
-                  <p className="mt-3 text-sm text-[#9aa09c]">No devices yet. Add your first sensor or controller.</p>
+                <div className="rounded-xl border border-dashed border-[var(--d-line)] p-10 text-center">
+                  <Cpu className="mx-auto h-8 w-8 text-[var(--d-muted)]" />
+                  <p className="mt-3 text-sm text-[var(--d-muted)]">No devices yet. Add your first sensor or controller.</p>
                 </div>
               ) : (
                 <div className="grid gap-3 md:grid-cols-2">
                   {devices.map((device) => {
                     const Icon = typeIcon(device.type);
                     return (
-                      <div key={device.id} className="group flex items-start gap-3.5 rounded-xl border border-white/[0.06] bg-[#1a1c1b] p-4 transition hover:border-white/15">
-                        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/[0.06] text-[#3fbf5f]">
+                      <div key={device.id} className="group flex items-start gap-3.5 rounded-xl border border-[var(--d-line)] bg-[var(--d-inset)] p-4 transition hover:border-[var(--d-line)]">
+                        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[var(--d-chip)] text-[var(--d-accent)]">
                           <Icon className="h-5 w-5" />
                         </span>
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2">
-                            <span className="truncate font-medium text-white">{device.name}</span>
-                            <span className={`h-2 w-2 shrink-0 rounded-full ${device.online ? "bg-[#3fbf5f] shadow-[0_0_8px_#3fbf5f]" : "bg-[#f5b942]"}`} />
+                            <span className="truncate font-medium text-[var(--d-text)]">{device.name}</span>
+                            <span className={`h-2 w-2 shrink-0 rounded-full ${device.online ? "bg-[var(--d-accent)] shadow-[0_0_8px_#3fbf5f]" : "bg-[var(--d-warn)]"}`} />
                           </div>
-                          <div className="mt-0.5 truncate text-[13px] text-[#9aa09c]">{device.type} · {device.location}</div>
+                          <div className="mt-0.5 truncate text-[13px] text-[var(--d-muted)]">{device.type} · {device.location}</div>
                           <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
-                            <span className="inline-flex items-center gap-1 rounded-md bg-white/[0.06] px-2 py-0.5 text-[11px] text-[#c5cbc7]">
+                            <span className="inline-flex items-center gap-1 rounded-md bg-[var(--d-chip)] px-2 py-0.5 text-[11px] text-[var(--d-soft)]">
                               {device.online ? <Wifi className="h-3 w-3" /> : <WifiOff className="h-3 w-3" />} {device.connection}
                             </span>
-                            <span className="rounded-md bg-white/[0.06] px-2 py-0.5 font-mono text-[11px] text-[#8d948f]">{device.serial}</span>
+                            <span className="rounded-md bg-[var(--d-chip)] px-2 py-0.5 font-mono text-[11px] text-[var(--d-muted)]">{device.serial}</span>
                           </div>
                         </div>
                         <button
                           type="button"
                           aria-label={`Remove ${device.name}`}
                           onClick={() => updateDevices(devices.filter((item) => item.id !== device.id), `${device.name} removed`)}
-                          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[#8d948f] transition hover:bg-[#ef5a5a]/15 hover:text-[#ff8a8a] sm:opacity-0 sm:group-hover:opacity-100 sm:focus:opacity-100"
+                          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[var(--d-muted)] transition hover:bg-[var(--d-danger-soft)] hover:text-[var(--d-danger-text)] sm:opacity-0 sm:group-hover:opacity-100 sm:focus:opacity-100"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
@@ -481,7 +480,7 @@ function SettingsView() {
 
           <Tabs.Content value="alerts" className="space-y-6 outline-none">
             <Panel icon={Bell} title="Notification channels" description="Where critical alerts and daily summaries are sent.">
-              <div className="divide-y divide-white/[0.06]">
+              <div className="divide-y divide-[var(--d-line)]">
                 {[
                   { key: "app" as const, label: "In-app notifications", detail: "Shown in the dashboard bell", icon: Smartphone },
                   { key: "sms" as const, label: "SMS", detail: "Critical alerts only", icon: MessageCircle },
@@ -489,10 +488,10 @@ function SettingsView() {
                   { key: "email" as const, label: "Email", detail: "Weekly reports", icon: Mail },
                 ].map((row) => (
                   <div key={row.key} className="flex items-center gap-3.5 py-3.5 first:pt-0 last:pb-0">
-                    <row.icon className="h-[18px] w-[18px] shrink-0 text-[#9aa09c]" />
+                    <row.icon className="h-[18px] w-[18px] shrink-0 text-[var(--d-muted)]" />
                     <div className="flex-1">
-                      <div className="text-sm font-medium text-white">{row.label}</div>
-                      <div className="text-xs text-[#8d948f]">{row.detail}</div>
+                      <div className="text-sm font-medium text-[var(--d-text)]">{row.label}</div>
+                      <div className="text-xs text-[var(--d-muted)]">{row.detail}</div>
                     </div>
                     <Switch on={alerts[row.key]} onChange={toggleAlert(row.key)} label={row.label} />
                   </div>
@@ -501,15 +500,15 @@ function SettingsView() {
             </Panel>
 
             <Panel icon={ShieldCheck} title="Automation & safety" description="How the system responds when limits are crossed.">
-              <div className="divide-y divide-white/[0.06]">
+              <div className="divide-y divide-[var(--d-line)]">
                 {[
                   { key: "autoAutomation" as const, label: "Act automatically", detail: "Run fans, foggers and valves without waiting for approval" },
                   { key: "quietHours" as const, label: "Quiet hours (10 pm – 6 am)", detail: "Hold non-critical alerts overnight" },
                 ].map((row) => (
                   <div key={row.key} className="flex items-center gap-3.5 py-3.5 first:pt-0 last:pb-0">
                     <div className="flex-1">
-                      <div className="text-sm font-medium text-white">{row.label}</div>
-                      <div className="text-xs text-[#8d948f]">{row.detail}</div>
+                      <div className="text-sm font-medium text-[var(--d-text)]">{row.label}</div>
+                      <div className="text-xs text-[var(--d-muted)]">{row.detail}</div>
                     </div>
                     <Switch on={alerts[row.key]} onChange={toggleAlert(row.key)} label={row.label} />
                   </div>
@@ -524,9 +523,9 @@ function SettingsView() {
                   ["Mode", "Demo"],
                   ["Data source", "Simulation engine"],
                 ].map(([label, value]) => (
-                  <div key={label} className="rounded-xl bg-[#1a1c1b] p-4">
-                    <dt className="text-xs text-[#8d948f]">{label}</dt>
-                    <dd className="mt-1 text-sm font-medium text-white">{value}</dd>
+                  <div key={label} className="rounded-xl bg-[var(--d-inset)] p-4">
+                    <dt className="text-xs text-[var(--d-muted)]">{label}</dt>
+                    <dd className="mt-1 text-sm font-medium text-[var(--d-text)]">{value}</dd>
                   </div>
                 ))}
               </dl>
@@ -535,29 +534,29 @@ function SettingsView() {
         </div>
       </Tabs.Root>
 
-      <p className="text-center text-xs text-[#6f7672]">Demo mode: changes are saved in this browser only.</p>
+      <p className="text-center text-xs text-[var(--d-muted)]">Demo mode: changes are saved in this browser only.</p>
 
       {/* Appears only when there are unsaved changes. */}
       <div
-        className={`fixed inset-x-4 bottom-4 z-40 mx-auto flex max-w-xl items-center gap-3 rounded-2xl border border-white/10 bg-[#2c2f2d]/95 p-3 pl-5 shadow-2xl backdrop-blur transition-all duration-300 ${dirty ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-6 opacity-0"}`}
+        className={`fixed inset-x-4 bottom-4 z-40 mx-auto flex max-w-xl items-center gap-3 rounded-2xl border border-[var(--d-line)] bg-[var(--d-popup)] p-3 pl-5 shadow-2xl backdrop-blur transition-all duration-300 ${dirty ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-6 opacity-0"}`}
       >
-        <span className="h-2 w-2 shrink-0 rounded-full bg-[#f5b942]" />
-        <span className="flex-1 text-sm text-[#dfe3e0]">You have unsaved changes</span>
-        <button type="button" onClick={discard} className="rounded-xl px-4 py-2 text-sm font-medium text-[#c5cbc7] transition hover:bg-white/10">
+        <span className="h-2 w-2 shrink-0 rounded-full bg-[var(--d-warn)]" />
+        <span className="flex-1 text-sm text-[var(--d-soft)]">You have unsaved changes</span>
+        <button type="button" onClick={discard} className="rounded-xl px-4 py-2 text-sm font-medium text-[var(--d-soft)] transition hover:bg-[var(--d-chip-hover)]">
           Discard
         </button>
-        <button type="button" onClick={save} className="rounded-xl bg-[#3fbf5f] px-4 py-2 text-sm font-semibold text-[#0d140f] transition hover:bg-[#6fd688]">
+        <button type="button" onClick={save} className="rounded-xl bg-[var(--d-accent)] px-4 py-2 text-sm font-semibold text-[var(--d-on-accent)] transition hover:opacity-90">
           Save changes
         </button>
       </div>
 
       <div
         role="status"
-        className={`fixed right-4 top-4 z-50 flex items-center gap-2 rounded-xl border border-[#3fbf5f]/30 bg-[#1a2a1f] px-4 py-3 text-sm text-white shadow-xl transition-all duration-300 ${toast ? "translate-y-0 opacity-100" : "pointer-events-none -translate-y-3 opacity-0"}`}
+        className={`fixed right-4 top-4 z-50 flex items-center gap-2 rounded-xl border border-[var(--d-line)] bg-[var(--d-accent-soft)] px-4 py-3 text-sm text-[var(--d-text)] shadow-xl transition-all duration-300 ${toast ? "translate-y-0 opacity-100" : "pointer-events-none -translate-y-3 opacity-0"}`}
       >
-        <Check className="h-4 w-4 text-[#3fbf5f]" /> {toast}
+        <Check className="h-4 w-4 text-[var(--d-accent)]" /> {toast}
       </div>
-    </div>
+    </DashboardPage>
   );
 }
 
@@ -576,21 +575,21 @@ function AddDeviceDialog({ locations, onAdd }: { locations: string[]; onAdd: (de
       }}
     >
       <Dialog.Trigger asChild>
-        <button type="button" className="inline-flex items-center gap-2 rounded-xl bg-[#3fbf5f] px-4 py-2.5 text-sm font-semibold text-[#0d140f] transition hover:bg-[#6fd688]">
+        <button type="button" className="inline-flex items-center gap-2 rounded-xl bg-[var(--d-accent)] px-4 py-2.5 text-sm font-semibold text-[var(--d-on-accent)] transition hover:opacity-90">
           <Plus className="h-4 w-4" /> Add device
         </button>
       </Dialog.Trigger>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 max-h-[90vh] w-[calc(100%-2rem)] max-w-2xl -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-2xl border border-white/10 bg-[#232524] p-6 text-white shadow-2xl [color-scheme:dark]">
+        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 max-h-[90vh] w-[calc(100%-2rem)] max-w-2xl -translate-x-1/2 -translate-y-1/2 overflow-y-auto dash-card rounded-2xl border border-[var(--d-card-border)] bg-[var(--d-card)] p-6 text-[var(--d-text)] shadow-2xl [color-scheme:dark]">
           <div className="flex items-start justify-between gap-4">
             <div>
               <Dialog.Title className="text-lg font-semibold">Add a smart device</Dialog.Title>
-              <Dialog.Description className="mt-1 text-sm text-[#9aa09c]">
+              <Dialog.Description className="mt-1 text-sm text-[var(--d-muted)]">
                 Power on the device, choose its type, then enter the serial number from its label.
               </Dialog.Description>
             </div>
-            <Dialog.Close aria-label="Close" className="flex h-9 w-9 items-center justify-center rounded-lg text-[#9aa09c] transition hover:bg-white/10 hover:text-white">
+            <Dialog.Close aria-label="Close" className="flex h-9 w-9 items-center justify-center rounded-lg text-[var(--d-muted)] transition hover:bg-[var(--d-chip-hover)] hover:text-[var(--d-text)]">
               <X className="h-4 w-4" />
             </Dialog.Close>
           </div>
@@ -613,7 +612,7 @@ function AddDeviceDialog({ locations, onAdd }: { locations: string[]; onAdd: (de
             }}
           >
             <div>
-              <span className="mb-2 block text-[13px] font-medium text-[#c5cbc7]">Device type</span>
+              <span className="mb-2 block text-[13px] font-medium text-[var(--d-soft)]">Device type</span>
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                 {deviceTypes.map((type) => {
                   const active = form.type === type.name;
@@ -622,12 +621,12 @@ function AddDeviceDialog({ locations, onAdd }: { locations: string[]; onAdd: (de
                       key={type.name}
                       type="button"
                       onClick={() => field("type")(type.name)}
-                      className={`flex items-center gap-2.5 rounded-xl border p-3 text-left transition ${active ? "border-[#3fbf5f] bg-[#3fbf5f]/10" : "border-white/10 bg-[#1a1c1b] hover:border-white/20"}`}
+                      className={`flex items-center gap-2.5 rounded-xl border p-3 text-left transition ${active ? "border-[var(--d-accent)] bg-[var(--d-accent-soft)]" : "border-[var(--d-line)] bg-[var(--d-inset)] hover:border-[var(--d-line)]"}`}
                     >
-                      <type.icon className={`h-[18px] w-[18px] shrink-0 ${active ? "text-[#3fbf5f]" : "text-[#9aa09c]"}`} />
+                      <type.icon className={`h-[18px] w-[18px] shrink-0 ${active ? "text-[var(--d-accent)]" : "text-[var(--d-muted)]"}`} />
                       <span className="min-w-0">
-                        <span className="block truncate text-sm font-medium text-white">{type.name}</span>
-                        <span className="block truncate text-[11px] text-[#8d948f]">{type.detail}</span>
+                        <span className="block truncate text-sm font-medium text-[var(--d-text)]">{type.name}</span>
+                        <span className="block truncate text-[11px] text-[var(--d-muted)]">{type.detail}</span>
                       </span>
                     </button>
                   );
@@ -642,11 +641,11 @@ function AddDeviceDialog({ locations, onAdd }: { locations: string[]; onAdd: (de
               <Field label="Install location"><Select value={form.location} onChange={field("location")} options={locations} /></Field>
             </div>
 
-            <div className="flex justify-end gap-2 border-t border-white/[0.06] pt-5">
-              <Dialog.Close type="button" className="rounded-xl px-4 py-2.5 text-sm font-medium text-[#c5cbc7] transition hover:bg-white/10">
+            <div className="flex justify-end gap-2 border-t border-[var(--d-line)] pt-5">
+              <Dialog.Close type="button" className="rounded-xl px-4 py-2.5 text-sm font-medium text-[var(--d-soft)] transition hover:bg-[var(--d-chip-hover)]">
                 Cancel
               </Dialog.Close>
-              <button type="submit" className="inline-flex items-center gap-2 rounded-xl bg-[#3fbf5f] px-5 py-2.5 text-sm font-semibold text-[#0d140f] transition hover:bg-[#6fd688]">
+              <button type="submit" className="inline-flex items-center gap-2 rounded-xl bg-[var(--d-accent)] px-5 py-2.5 text-sm font-semibold text-[var(--d-on-accent)] transition hover:opacity-90">
                 <Plus className="h-4 w-4" /> Add device
               </button>
             </div>

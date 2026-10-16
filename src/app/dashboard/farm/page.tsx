@@ -1,95 +1,114 @@
 "use client";
 
-import { Activity, CloudRain, CloudSun, Droplets, FlaskConical, Gauge, Power, Sprout, Thermometer, ThermometerSun, Waves, Zap } from "lucide-react";
-import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { useState } from "react";
+import { Activity, CalendarClock, ChartLine, CloudRain, CloudSun, Droplets, Faucet, Gauge, PlugZap, ShieldCheck, SlidersVertical, Sprout, Waves } from "lucide-react";
 
-import { ecHistory, soilMoistureHistory, temperatureHistory, waterLevelHistory } from "@/data/mock";
+import { EnergyPanel, ProtectionPanel, SupplyPanel, supplyStatus, usePowerFeed } from "@/components/dashboard/farm-power";
+import { FertigationBoard } from "@/components/dashboard/fertigation-board";
+import { SchedulerPanel, VolumePanel, useIrrigationPlan } from "@/components/dashboard/irrigation-planner";
+import {
+  AlertList,
+  ReadingTile,
+  SectionHeader,
+  SetpointPanel,
+  SoilMoistureGauge,
+  WaterTankGauge,
+  farmAlerts,
+  farmSetpoints,
+  reading,
+  soilReadings,
+} from "@/components/dashboard/monitor-widgets";
+import { DashboardPage, PageHeader, Pill, StatTile, TabWidget, TrendChart, type TrendSeries } from "@/components/dashboard/page-kit";
+import { SoilEcIcon, SoilMoistureIcon, TemperatureIcon, WaterLevelIcon } from "@/components/dashboard/sensor-icons";
+import { ValveControl } from "@/components/dashboard/valve-control";
+import { demoFarm, ecHistory, soilMoistureHistory, temperatureHistory, waterLevelHistory } from "@/data/mock";
 
-const gradientCard =
-  "rounded-lg bg-[#232524] text-white";
-
-const metrics = [
-  { label: "Soil Moisture", value: "31%", icon: Droplets },
-  { label: "Soil Temperature", value: "27.2°C", icon: Thermometer },
-  { label: "Soil EC", value: "0.82 mS/cm", icon: Zap },
-  { label: "Soil pH", value: "6.7", icon: FlaskConical },
-  { label: "Water Level", value: "72%", icon: Waves },
-  { label: "Water Temperature", value: "26.1°C", icon: ThermometerSun },
-  { label: "Water EC", value: "0.65 mS/cm", icon: Activity },
+// Field readings with no history or set point: water quality, flow and weather.
+const fieldStatus = [
+  { label: "Water Temp.", value: "26.1", unit: "°C", icon: TemperatureIcon },
+  { label: "Water EC", value: "0.65", unit: "mS/cm", icon: Activity },
+  { label: "Flow Meter", value: "4.1", unit: "L/min", icon: Gauge },
   { label: "Rain", value: "No", icon: CloudRain },
   { label: "Weather", value: "Mild", icon: CloudSun },
-  { label: "Flow Meter", value: "4.1 L/min", icon: Gauge },
-  { label: "Irrigation", value: "OFF", icon: Power },
 ];
 
-const charts = [
-  { id: "farmMoisture", title: "Soil Moisture History", data: soilMoistureHistory, color: "#3fbf5f", icon: Droplets },
-  { id: "farmTemperature", title: "Temperature History", data: temperatureHistory, color: "#f5b942", icon: Thermometer },
-  { id: "farmEc", title: "EC History", data: ecHistory, color: "#b094ff", icon: Zap },
-  { id: "farmWaterLevel", title: "Water Level History", data: waterLevelHistory, color: "#5abef0", icon: Waves },
+const charts: TrendSeries[] = [
+  { id: "farmMoisture", title: "Soil Moisture", unit: "%", data: soilMoistureHistory, tone: "accent", icon: SoilMoistureIcon },
+  { id: "farmTemperature", title: "Temperature", unit: "°C", data: temperatureHistory, tone: "warn", icon: TemperatureIcon },
+  { id: "farmEc", title: "Soil EC", unit: "mS/cm", data: ecHistory, tone: "accent", icon: SoilEcIcon },
+  { id: "farmWaterLevel", title: "Water Level", unit: "%", data: waterLevelHistory, tone: "info", icon: WaterLevelIcon },
 ];
 
 export default function FarmMonitorPage() {
+  const [setpoints, setSetpoints] = useState(() => Object.fromEntries(farmSetpoints.map((item) => [item.key, item.value])));
+  const plan = useIrrigationPlan();
+  const power = usePowerFeed();
+  const supply = supplyStatus(power);
+  const block = reading("Soil Moisture")?.location ?? "Block A";
+
   return (
-    <div className="space-y-6">
-      <div className={`${gradientCard} flex flex-wrap items-center justify-between gap-4 p-5 sm:p-6`}>
-        <div className="flex items-center gap-4">
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#3fbf5f]/15 text-[#3fbf5f]">
-            <Sprout className="h-7 w-7" />
-          </div>
-          <div>
-            <div className="text-xs font-semibold uppercase tracking-[0.2em] text-white/80">Farm Monitor</div>
-            <h1 className="mt-1 text-2xl font-bold text-white sm:text-3xl">Field condition overview</h1>
+    <DashboardPage tint="plant">
+      <PageHeader icon={Sprout} eyebrow="Farm Monitor" title="Field condition overview" detail={`${demoFarm.name} · Mulberry field · ${block} · ${demoFarm.acres} acres`} />
+
+      <section aria-label="Field sensors">
+        <SectionHeader icon={SoilMoistureIcon} title="Field Sensors" detail={`Live soil and water readings · ${block} · tap a card for its history`} />
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <WaterTankGauge />
+          <SoilMoistureGauge />
+          <div className="grid grid-cols-3 gap-4 sm:col-span-2">
+            {soilReadings.map((item) => (
+              <ReadingTile key={item.label} {...item} />
+            ))}
           </div>
         </div>
-        <span className="inline-flex items-center rounded-full bg-[#f5b942]/15 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.15em] text-[#f5b942]">
-          Demo Data
-        </span>
-      </div>
+        <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-5">
+          {fieldStatus.map((item) => (
+            <StatTile key={item.label} {...item} />
+          ))}
+        </div>
+      </section>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {metrics.map((metric) => (
-          <div key={metric.label} className={`${gradientCard} flex items-center gap-4 p-4`}>
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#3fbf5f]/15 text-[#3fbf5f]">
-              <metric.icon className="h-6 w-6" />
-            </div>
-            <div className="min-w-0">
-              <div className="text-xs font-semibold uppercase tracking-[0.16em] text-white/80">{metric.label}</div>
-              <div className="mt-1 text-2xl font-bold text-[#3fbf5f]">{metric.value}</div>
-            </div>
-          </div>
-        ))}
-      </div>
+      <section aria-label="Irrigation controls">
+        <SectionHeader icon={Waves} title="Irrigation Controls" detail="Valves, timing schedules, water volumes and the pump's power supply" />
+        <div className="grid items-start gap-4 xl:grid-cols-3">
+          <TabWidget
+            title="Irrigation"
+            icon={Waves}
+            className="xl:col-span-2"
+            tabs={[
+              { id: "valves", label: "Pump & Valves", icon: Faucet, content: <ValveControl embedded />, keepMounted: true },
+              { id: "schedule", label: "Scheduler", icon: CalendarClock, content: <SchedulerPanel plan={plan} /> },
+              { id: "volume", label: "Volume", icon: Droplets, content: <VolumePanel plan={plan} /> },
+              { id: "setpoints", label: "Set Points", icon: SlidersVertical, content: <SetpointPanel embedded items={farmSetpoints} values={setpoints} onChange={(key, value) => setSetpoints((current) => ({ ...current, [key]: value }))} /> },
+            ]}
+          />
+          <TabWidget
+            title="Pump & Power"
+            icon={PlugZap}
+            tint="light"
+            action={<Pill tone={supply.tone}>{supply.label}</Pill>}
+            tabs={[
+              { id: "supply", label: "3-Phase", icon: PlugZap, content: <SupplyPanel feed={power} /> },
+              { id: "energy", label: "Energy", icon: Gauge, content: <EnergyPanel feed={power} /> },
+              { id: "protection", label: "Protection", icon: ShieldCheck, content: <ProtectionPanel feed={power} /> },
+            ]}
+          />
+        </div>
+      </section>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        {charts.map((chart) => (
-          <div key={chart.id} className={`${gradientCard} p-3 sm:p-4`}>
-            <div className="flex items-center gap-3 px-2 pb-3 pt-1">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#3fbf5f]/15 text-[#3fbf5f]">
-                <chart.icon className="h-5 w-5" />
-              </div>
-              <h3 className="text-lg font-bold text-white">{chart.title}</h3>
-            </div>
-            <div className="h-64 rounded-md bg-[#1a1c1b] p-3 pt-4">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chart.data}>
-                  <defs>
-                    <linearGradient id={chart.id} x1="0" x2="0" y1="0" y2="1">
-                      <stop offset="5%" stopColor={chart.color} stopOpacity={0.45} />
-                      <stop offset="95%" stopColor={chart.color} stopOpacity={0.05} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#343735" />
-                  <XAxis dataKey="time" tickLine={false} axisLine={false} />
-                  <YAxis tickLine={false} axisLine={false} />
-                  <Tooltip />
-                  <Area dataKey="value" stroke={chart.color} fill={`url(#${chart.id})`} strokeWidth={2.4} />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
+      <section aria-label="Fertigation">
+        <FertigationBoard />
+      </section>
+
+      <section aria-label="Trends and alerts">
+        <SectionHeader icon={ChartLine} title="Trends & Alerts" detail="Recent history for the field and open farm alerts" />
+        <div className="grid items-start gap-4 lg:grid-cols-2">
+          {charts.map((chart) => (
+            <TrendChart key={chart.id} {...chart} />
+          ))}
+          <AlertList items={farmAlerts} className="lg:col-span-2" />
+        </div>
+      </section>
+    </DashboardPage>
   );
 }
