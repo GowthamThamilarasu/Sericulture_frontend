@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 
-// The Paari Seritech logo, used unmodified. Its lettering is dark green, so on dark
+// The Paari Seritech logo (wide, about 5:3), with its white margins trimmed. Its lettering is dark green, so on dark
 // surfaces pass `plate` to sit it on a white tile.
 export function Logo({ className, plate }: { className?: string; plate?: boolean }) {
   const image = (
@@ -8,8 +8,8 @@ export function Logo({ className, plate }: { className?: string; plate?: boolean
     <img
       src="/paari-seritech-logo.png"
       alt="Paari Seritech"
-      width={1207}
-      height={1303}
+      width={1000}
+      height={604}
       className={cn("w-auto shrink-0", plate ? "h-full" : className)}
     />
   );

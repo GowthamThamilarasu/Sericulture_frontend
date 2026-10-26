@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, Presentation, Sprout, Warehouse } from "lucide-react";
+import { ArrowRight, Presentation, RadioTower, Sprout, Warehouse } from "lucide-react";
 
 import { Accent, Eyebrow, Flourish } from "@/components/landing/flourish";
 import { SiteFooter, SiteHeader, gradientCard, pillGreen, pillLight, section, siteShell } from "@/components/landing/landing-page";
@@ -8,7 +8,7 @@ import { ProductShowcase } from "@/components/landing/product-showcase";
 
 export const metadata: Metadata = {
   title: "Products | Paari Seritech",
-  description: "Paari Seritech shed controllers, environmental sensors and field sensors for mulberry cultivation and silkworm rearing.",
+  description: "Paari Seritech LoRa gateway, shed controllers, multi sensor control system, environmental sensors and field sensors for mulberry cultivation and silkworm rearing.",
 };
 
 export default function ProductsPage() {
@@ -25,10 +25,13 @@ export default function ProductsPage() {
             </h1>
             <Flourish className="mt-6" />
             <p className="mt-5 text-base leading-7 text-ink-soft sm:text-lg sm:leading-8">
-              Controllers and sensors that connect your mulberry farm and silkworm rearing shed to one platform.
+              A gateway, controllers and sensors that connect your mulberry farm and silkworm rearing shed to one platform.
             </p>
             <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-              <a href="#shed" className={pillGreen}>
+              <a href="#gateway" className={pillGreen}>
+                <RadioTower className="h-4 w-4" /> Gateway
+              </a>
+              <a href="#shed" className={pillLight}>
                 <Warehouse className="h-4 w-4" /> Shed Products
               </a>
               <a href="#field" className={pillLight}>

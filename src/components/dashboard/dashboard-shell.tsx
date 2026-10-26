@@ -12,9 +12,9 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
     <DashboardThemeRoot>
       <div className="flex min-h-screen">
         <aside className="hidden w-64 shrink-0 border-r border-[var(--d-line)] bg-[var(--d-side)] p-5 text-[var(--d-soft)] lg:block">
-          <Link href="/" className="mb-8 flex items-center gap-3">
-            <Logo plate className="h-20" />
-            <div className="text-[10px] uppercase tracking-[0.2em] text-[var(--d-muted)]">Control Center</div>
+          <Link href="/" className="mb-8 flex flex-col items-start gap-2">
+            <Logo plate className="h-28" />
+            <div className="pl-1 text-[10px] uppercase tracking-[0.2em] text-[var(--d-muted)]">Control Center</div>
           </Link>
 
           <DashboardNav />

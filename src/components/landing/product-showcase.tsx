@@ -2,17 +2,18 @@
 
 import { useEffect, useRef } from "react";
 import { JetBrains_Mono, Space_Grotesk } from "next/font/google";
-import { Activity, ArrowDownRight, ArrowRight, Cloud, CloudRain, CloudSun, Compass, Cylinder, Droplet, Droplets, Fan, FlaskConical, Gauge, Leaf, Lightbulb, Sprout, Sun, TestTube, Thermometer, Umbrella, Waves, Wind, Zap } from "lucide-react";
+import { Activity, ArrowDownRight, ArrowRight, BatteryCharging, Cloud, CloudRain, CloudSun, Compass, Cylinder, Droplet, Droplets, Fan, FlaskConical, Gauge, Leaf, Lightbulb, RadioTower, Sprout, Sun, TestTube, Thermometer, Umbrella, Waves, Wifi, Wind, Zap } from "lucide-react";
 
 const specFont = Space_Grotesk({ subsets: ["latin"] });
 const specMono = JetBrains_Mono({ subsets: ["latin"] });
 
 type Product = {
   name: string;
-  group: "Shed" | "Field";
+  group: "Gateway" | "Shed" | "Field";
   image: string;
   alt: string;
   wide?: boolean;
+  tall?: boolean; // portrait photo: shown taller than the square size
   summary: string;
   features: string[];
   motifs: (typeof Activity)[];
@@ -28,6 +29,16 @@ const motifSlots = [
 
 const products: Product[] = [
   {
+    name: "LoRa Gateway",
+    group: "Gateway",
+    image: "/products/lora-gateway.jpg",
+    alt: "Paari Seritech LoRa gateway: a white weatherproof enclosure with two antennas and four cable glands",
+    tall: true,
+    summary: "LoRa Gateway: the weatherproof hub that links every Paari Seritech device on the farm and in the shed, and connects them to the internet.",
+    features: ["Local-area (LoRa) link to all the devices on the farm", "Ethernet, Wi-Fi and GSM modem connectivity", "Runs on its internal battery", "Dual supply: solar powered and DC powered"],
+    motifs: [RadioTower, Wifi, BatteryCharging, Sun],
+  },
+  {
     name: "Shed Controller",
     group: "Shed",
     image: "/products/shed-controller.jpg",
@@ -36,6 +47,21 @@ const products: Product[] = [
     summary: "Shed Automation Controller: a wall-mounted touchscreen that shows the shed environment and connects to the equipment that manages it.",
     features: ["Shows temperature, humidity, CO₂, NH₃, light and door status", "Connections for heater, fan, cooling, humidifier and lights", "Dashboard, Trends, Control, Alerts and Settings screens", "Wall-mounted enclosure with a built-in touchscreen"],
     motifs: [Thermometer, Fan, Lightbulb, Droplet],
+  },
+  {
+    name: "Multi Sensor Control System",
+    group: "Shed",
+    image: "/products/multi-sensor-control.jpg",
+    alt: "Paari Seritech multi sensor control system: a weatherproof enclosure with LoRa and ESP-NOW antennas, status lights and five cable ports",
+    wide: true,
+    summary: "Multi Sensor Control System: one weatherproof unit that reads the shed's sensors (temperature, humidity, leaf moisture, CO₂ and light) and controls equipment such as ventilation.",
+    features: [
+      "Connects any sensor: two I²C / analog / digital ports and RS485 (Modbus)",
+      "LoRa and ESP-NOW wireless technology",
+      "Battery operated and solar powered, with a 12–24 V DC input",
+      "Input / output port to control equipment such as ventilation fans",
+    ],
+    motifs: [RadioTower, Thermometer, Sun, BatteryCharging],
   },
   {
     name: "Environmental Sensor",
@@ -110,7 +136,8 @@ export function ProductShowcase() {
     };
   }, []);
 
-  const firstField = products.findIndex((product) => product.group === "Field");
+  // Each group's first product carries the anchor the page header buttons jump to.
+  const anchors = new Map((["Gateway", "Shed", "Field"] as const).map((group) => [products.findIndex((product) => product.group === group), group.toLowerCase()]));
 
   return (
     <div ref={rootRef}>
@@ -121,7 +148,7 @@ export function ProductShowcase() {
           <section
             key={product.name}
             data-scene
-            id={index === 0 ? "shed" : index === firstField ? "field" : undefined}
+            id={anchors.get(index)}
             className="relative flex min-h-[78vh] scroll-mt-16 flex-col overflow-hidden lg:min-h-[92vh]"
             style={{ backgroundColor: tints[index % tints.length] }}
           >
@@ -196,7 +223,11 @@ export function ProductShowcase() {
                   role="img"
                   aria-label={product.alt}
                   className={`relative bg-contain bg-center bg-no-repeat mix-blend-multiply will-change-transform ${
-                    product.wide ? "aspect-[4/3] w-[min(86vw,560px)] xl:w-[min(40vw,620px)]" : "aspect-square w-[min(60vw,300px)] xl:w-[min(24vw,360px)]"
+                    product.wide
+                      ? "aspect-[4/3] w-[min(86vw,560px)] xl:w-[min(40vw,620px)]"
+                      : product.tall
+                        ? "aspect-[11/14] w-[min(66vw,340px)] xl:w-[min(26vw,400px)]"
+                        : "aspect-square w-[min(60vw,300px)] xl:w-[min(24vw,360px)]"
                   }`}
                   style={{
                     backgroundImage: `url('${product.image}')`,
