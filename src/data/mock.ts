@@ -1,4 +1,4 @@
-import type { AIInsight, AlertItem, Actuator, CameraAnalysis, DoorSensor, Farm, FarmPlot, FarmValve, FertigationReading, FertigationSession, InstarStage, IrrigationSchedule, IrrigationSession, MulberryPlot, PhaseReading, Sensor, Shed, SilkwormBatch, VolumeSettings } from "@/types";
+import type { AIInsight, AlertItem, Actuator, BatchRecord, FieldActivity, MulberryBlock, CameraAnalysis, DoorSensor, Farm, FarmPlot, FarmValve, FertigationReading, FertigationSession, InstarStage, IrrigationSchedule, IrrigationSession, MulberryPlot, PhaseReading, Sensor, Shed, SilkwormBatch, VolumeSettings } from "@/types";
 
 export const demoFarm: Farm = {
   id: "farm-1",
@@ -82,8 +82,6 @@ export const actuators: Actuator[] = [
 ];
 
 export const silkwormBatch: SilkwormBatch = {
-  id: "batch-1",
-  instar: "IV",
   condition: "Good",
   riskZone: 18,
   stressRisk: "Moderate",
@@ -98,6 +96,60 @@ export const silkwormBatch: SilkwormBatch = {
   mortality: "Low",
   mulberryQuality: "Good",
 };
+
+// Farms and their rearing sheds, for the batch settings.
+export const farmSheds: { farm: string; sheds: string[] }[] = [
+  { farm: "Kallakurichi Mulberry Center", sheds: ["Shed A1", "Shed A2"] },
+  { farm: "Hosur Sericulture Unit", sheds: ["Shed H1", "Shed H2", "Shed H3"] },
+  { farm: "Dharmapuri Silk Farm", sheds: ["Shed D1"] },
+];
+
+// Silkworm races and hybrids reared in Tamil Nadu, with the breed type each belongs to.
+export const silkwormBreeds: { breed: string; type: string }[] = [
+  { breed: "CSR2 × CSR4", type: "Bivoltine hybrid" },
+  { breed: "FC1 × FC2", type: "Bivoltine hybrid" },
+  { breed: "PM × CSR2", type: "Multivoltine × Bivoltine" },
+  { breed: "PM × CSR4", type: "Multivoltine × Bivoltine" },
+  { breed: "CSR2", type: "Bivoltine" },
+  { breed: "CSR4", type: "Bivoltine" },
+  { breed: "Pure Mysore", type: "Multivoltine" },
+];
+
+export const breedTypes = ["Bivoltine hybrid", "Bivoltine", "Multivoltine × Bivoltine", "Multivoltine", "Improved hybrid"];
+
+// Rearing batches, newest first. Yield is cocoon weight for the batch; per 100 DFLs is the usual comparison.
+export const batchHistory: BatchRecord[] = [
+  { id: "SB-2026-014", farm: "Kallakurichi Mulberry Center", shed: "Shed A1", breed: "CSR2 × CSR4", breedType: "Bivoltine hybrid", brushedOn: "2026-10-03", instar: "Auto", harvestedOn: null, layings: 100, cocoonKg: null, grade: null, mortality: null, status: "Rearing" },
+  { id: "SB-2026-013", farm: "Kallakurichi Mulberry Center", shed: "Shed A1", breed: "CSR2 × CSR4", breedType: "Bivoltine hybrid", brushedOn: "2026-08-28", instar: "Auto", harvestedOn: "2026-09-24", layings: 100, cocoonKg: 68.4, grade: "A", mortality: 3.1, status: "Harvested" },
+  { id: "SB-2026-012", farm: "Kallakurichi Mulberry Center", shed: "Shed A1", breed: "CSR2 × CSR4", breedType: "Bivoltine hybrid", brushedOn: "2026-07-20", instar: "Auto", harvestedOn: "2026-08-16", layings: 100, cocoonKg: 64.2, grade: "A", mortality: 4.0, status: "Harvested" },
+  { id: "SB-2026-011", farm: "Kallakurichi Mulberry Center", shed: "Shed A2", breed: "PM × CSR2", breedType: "Multivoltine × Bivoltine", brushedOn: "2026-06-10", instar: "Auto", harvestedOn: "2026-07-05", layings: 75, cocoonKg: 39.1, grade: "B", mortality: 6.2, status: "Harvested" },
+  { id: "SB-2026-010", farm: "Kallakurichi Mulberry Center", shed: "Shed A1", breed: "CSR2 × CSR4", breedType: "Bivoltine hybrid", brushedOn: "2026-04-30", instar: "Auto", harvestedOn: "2026-05-27", layings: 100, cocoonKg: 61.0, grade: "A", mortality: 3.8, status: "Harvested" },
+  { id: "SB-2026-009", farm: "Kallakurichi Mulberry Center", shed: "Shed A2", breed: "FC1 × FC2", breedType: "Bivoltine hybrid", brushedOn: "2026-03-22", instar: "Auto", harvestedOn: "2026-04-09", layings: 50, cocoonKg: null, grade: null, mortality: 41, status: "Failed" },
+];
+
+export const irrigationTypes = ["Drip", "Underground drip", "Sprinkler", "Micro-sprinkler / mist", "Open field (flood)", "Furrow", "Rain-fed"];
+export const plantingSystems = ["Paired row", "Row system", "Pit system", "Tree / bush"];
+export const leafDefects = ["Leaf spot", "Powdery mildew", "Leaf rust", "Root rot", "Tukra (mealybug)", "Thrips", "Whitefly", "Leaf roller", "Yellowing / nutrient deficiency", "Mosaic", "Other"];
+
+export const mulberryBlocks: MulberryBlock[] = [
+  { id: "blk-a", name: "Block A", variety: "V1 (Victory-1)", area: 12, irrigation: "Drip", plantingSystem: "Paired row", plantedOn: "2022-07-12", manuringEveryDays: 70 },
+  { id: "blk-b", name: "Block B", variety: "S36", area: 10, irrigation: "Underground drip", plantingSystem: "Paired row", plantedOn: "2023-01-20", manuringEveryDays: 70 },
+  { id: "blk-c", name: "Block C", variety: "MR2", area: 9, irrigation: "Sprinkler", plantingSystem: "Row system", plantedOn: "2021-11-05", manuringEveryDays: 75 },
+];
+
+// Field log, newest first. Spray waiting periods are demo values; follow the product label and your extension officer.
+export const fieldActivities: FieldActivity[] = [
+  { id: "act-10", date: "2026-10-22", blockId: "blk-b", type: "Manuring", title: "FYM second split", status: "Planned", product: "Farmyard manure", dose: "10 t/ha" },
+  { id: "act-9", date: "2026-10-15", blockId: "blk-b", type: "Pest control", title: "Thrips and whitefly spray", status: "Done", product: "DDVP 76 EC", dose: "1 ml/L", waitDays: 7, notes: "Sprayed on underside of leaves, evening." },
+  { id: "act-8", date: "2026-10-14", blockId: "blk-a", type: "Leaf harvest", title: "Shoot harvest for batch SB-2026-014", status: "Done", notes: "Late-age feeding." },
+  { id: "act-7", date: "2026-10-12", blockId: "all", type: "Weeding", title: "Inter-row weeding", status: "Done" },
+  { id: "act-6", date: "2026-10-10", blockId: "blk-a", type: "Manuring", title: "NPK split dose, crop 4", status: "Done", product: "Urea + SSP + MOP", dose: "60:24:24 kg NPK/ha" },
+  { id: "act-5", date: "2026-10-09", blockId: "blk-c", type: "Medication", title: "Leaf spot treatment", status: "Done", product: "Carbendazim 50 WP", dose: "1 g/L", waitDays: 5 },
+  { id: "act-4", date: "2026-10-08", blockId: "blk-c", type: "Defect", title: "Brown spots on lower leaves", status: "Done", defect: "Leaf spot", severity: "Moderate", affected: 12 },
+  { id: "act-3", date: "2026-09-30", blockId: "blk-b", type: "Soil test", title: "Soil sample sent to lab", status: "Done", notes: "pH 6.8, EC normal, low zinc." },
+  { id: "act-2", date: "2026-09-28", blockId: "blk-a", type: "Pruning", title: "Bottom pruning after harvest", status: "Done" },
+  { id: "act-1", date: "2026-08-25", blockId: "blk-c", type: "Manuring", title: "NPK split dose, crop 3", status: "Done", product: "Urea + SSP + MOP", dose: "60:24:24 kg NPK/ha" },
+];
 
 export const mulberryPlots: MulberryPlot[] = [
   { id: "m1", variety: "V1 (Victory-1)", growthStage: "Active canopy growth", leafSize: "Medium", leafColour: "Green", leafDensity: "Consistent", visibleDamage: "Low", growthVariation: "Normal", soilCondition: "Balanced", irrigation: "Scheduled", fertilization: "Approved" },
@@ -117,12 +169,16 @@ export const fertigationSessions: FertigationSession[] = [
 
 export const doorSensor: DoorSensor = { location: "Shed A1 main door", state: "Closed", since: "08:42", openedToday: 6 };
 
+// Every valve has its own flow meter and pressure sensor just after it, so both read zero while it is closed.
 export const farmValves: FarmValve[] = [
-  { id: "v1", name: "Valve 1", zone: "Block A", flowRate: 30, volume: 420, infinite: false, delivered: 126, open: true },
-  { id: "v2", name: "Valve 2", zone: "Block B", flowRate: 30, volume: 390, infinite: false, delivered: 0, open: false },
-  { id: "v3", name: "Valve 3", zone: "Block C", flowRate: 25, volume: 350, infinite: false, delivered: 0, open: false },
-  { id: "v4", name: "Valve 4", zone: "Nursery", flowRate: 12, volume: 100, infinite: true, delivered: 0, open: false },
+  { id: "v1", name: "Valve 1", zone: "Block A", flowRate: 30, pressure: 1.6, volume: 420, infinite: false, delivered: 126, open: true },
+  { id: "v2", name: "Valve 2", zone: "Block B", flowRate: 30, pressure: 1.5, volume: 390, infinite: false, delivered: 0, open: false },
+  { id: "v3", name: "Valve 3", zone: "Block C", flowRate: 25, pressure: 1.4, volume: 350, infinite: false, delivered: 0, open: false },
+  { id: "v4", name: "Valve 4", zone: "Nursery", flowRate: 12, pressure: 1.2, volume: 100, infinite: true, delivered: 0, open: false },
 ];
+
+// Pressure sensor on the pump outlet (bar) while the pump is running.
+export const pumpOutletPressure = 2.6;
 
 // Nutrient solution readings; TDS follows EC (ppm ≈ EC mS/cm × 640).
 export const fertigationReadings: FertigationReading[] = [
@@ -181,3 +237,19 @@ export const powerHistory = [
 ];
 
 export const pumpProtection = { runHoursToday: 2.6, runHoursTotal: 1842, starts: 4, lastTrip: "None in 30 days" };
+
+// Devices the seller (Paari Seritech) offers, shown in Settings → Device Store. Images are the website's product photos.
+export const sellerCatalog: { name: string; group: "Shed" | "Field"; image: string; summary: string; price: string }[] = [
+  { name: "Shed Controller", group: "Shed", image: "/products/shed-controller.jpg", summary: "Runs fans, humidifier, heater and lights from one panel, with Auto, Semi and Manual modes.", price: "On request" },
+  { name: "Environmental Sensor", group: "Shed", image: "/products/environmental-sensor.jpg", summary: "Temperature, humidity, NH₃, CO₂ and light in the rearing shed.", price: "On request" },
+  { name: "Soil Moisture Sensor", group: "Field", image: "/products/soil-moisture.jpg", summary: "Soil moisture in the root zone, to drive irrigation.", price: "On request" },
+  { name: "Soil Temperature Sensor", group: "Field", image: "/products/soil-temperature.jpg", summary: "Root-zone soil temperature.", price: "On request" },
+  { name: "Soil EC Sensor", group: "Field", image: "/products/soil-ec.jpg", summary: "Soil salinity and nutrient level as electrical conductivity.", price: "On request" },
+  { name: "Soil pH Sensor", group: "Field", image: "/products/soil-ph.jpg", summary: "Soil acidity for fertiliser planning.", price: "On request" },
+  { name: "Water EC Sensor", group: "Field", image: "/products/water-ec.jpg", summary: "Irrigation and fertigation water quality.", price: "On request" },
+  { name: "Flow Sensor", group: "Field", image: "/products/flow.jpg", summary: "Water flow in the irrigation line, per valve or at the pump.", price: "On request" },
+  { name: "Pressure Sensor", group: "Field", image: "/products/pressure.jpg", summary: "Line pressure to confirm pumps and valves are delivering.", price: "On request" },
+  { name: "Tank Level Sensor", group: "Field", image: "/products/tank-level.jpg", summary: "Water or nutrient level in storage tanks.", price: "On request" },
+  { name: "Rain Sensor", group: "Field", image: "/products/rain.jpg", summary: "Detects rain so irrigation can skip a run.", price: "On request" },
+  { name: "Weather Station", group: "Field", image: "/products/weather-station.jpg", summary: "Wind, rain, temperature, humidity and sunlight at the farm.", price: "On request" },
+];

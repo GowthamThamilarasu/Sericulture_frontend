@@ -148,7 +148,7 @@ export function EnergyPanel({ feed }: { feed: Feed }) {
               contentStyle={{ backgroundColor: palette.tooltipBg, border: `1px solid ${palette.tooltipBorder}`, borderRadius: 8, color: palette.text }}
               labelStyle={{ color: palette.muted }}
             />
-            <Bar dataKey="value" fill={palette.warn} radius={[4, 4, 0, 0]} maxBarSize={18} isAnimationActive={false} />
+            <Bar dataKey="value" fill={palette.accent} radius={[4, 4, 0, 0]} maxBarSize={18} isAnimationActive={false} />
           </BarChart>
         </ResponsiveContainer>
       </div>

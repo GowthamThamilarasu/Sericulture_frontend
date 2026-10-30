@@ -140,7 +140,7 @@ function HistoryWindow({ param, range, onRange }: { param: HistoryParam; range: 
               aria-selected={item.key === range}
               onClick={() => onRange(item.key)}
               className={`rounded-full px-4 py-1.5 text-xs font-semibold transition-colors ${
-                item.key === range ? "bg-[var(--d-accent)] text-[var(--d-on-accent)]" : "text-[var(--d-muted)] hover:text-[var(--d-text)]"
+                item.key === range ? "accent-fill" : "text-[var(--d-muted)] hover:text-[var(--d-text)]"
               }`}
             >
               {item.label}

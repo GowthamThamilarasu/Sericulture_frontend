@@ -28,7 +28,8 @@ export interface FarmValve {
   id: string;
   name: string;
   zone: string;
-  flowRate: number; // litres per minute
+  flowRate: number; // litres per minute, read by the valve's flow meter while open
+  pressure: number; // bar, read by the valve's pressure sensor while open
   volume: number;
   infinite: boolean;
   delivered: number;
@@ -115,9 +116,10 @@ export interface AutomationRule {
   mode: "AUTO" | "MANUAL" | "SCHEDULED";
 }
 
+export type InstarKey = "I" | "II" | "III" | "IV" | "V" | "Spinning";
+
+/** Live condition of the batch being reared; which batch it is comes from the batch list (BatchRecord). */
 export interface SilkwormBatch {
-  id: string;
-  instar: string;
   condition: string;
   riskZone: number;
   stressRisk: "Low" | "Moderate" | "High";
@@ -133,6 +135,23 @@ export interface SilkwormBatch {
   mulberryQuality: string;
 }
 
+/** A rearing batch, running or finished. Dates are "YYYY-MM-DD". */
+export interface BatchRecord {
+  id: string; // batch number, e.g. "SB-2026-014"
+  farm: string;
+  shed: string;
+  breed: string; // race / hybrid, e.g. "CSR2 × CSR4"
+  breedType: string; // e.g. "Bivoltine hybrid"
+  brushedOn: string; // day the larvae were brushed onto the rearing bed
+  instar: InstarKey | "Auto"; // "Auto" works the instar out from the brushing date
+  harvestedOn: string | null; // null while still rearing
+  layings: number; // disease-free layings (DFLs) brushed
+  cocoonKg: number | null;
+  grade: "A" | "B" | "C" | null;
+  mortality: number | null; // %
+  status: "Rearing" | "Harvested" | "Failed";
+}
+
 export interface MulberryPlot {
   id: string;
   variety: string;
@@ -145,6 +164,39 @@ export interface MulberryPlot {
   soilCondition: string;
   irrigation: string;
   fertilization: string;
+}
+
+/** A mulberry block as set up on the Mulberry tab. Dates are "YYYY-MM-DD". */
+export interface MulberryBlock {
+  id: string;
+  name: string;
+  variety: string;
+  area: number; // acres cultivated
+  irrigation: string; // e.g. "Drip", "Underground drip", "Sprinkler"
+  plantingSystem: string; // e.g. "Paired row"
+  plantedOn: string;
+  manuringEveryDays: number; // days between manuring splits
+}
+
+export type FieldActivityType = "Manuring" | "Medication" | "Pest control" | "Defect" | "Pruning" | "Weeding" | "Leaf harvest" | "Irrigation" | "Soil test" | "Other";
+
+/** One entry in the mulberry field log. */
+export interface FieldActivity {
+  id: string;
+  date: string; // "YYYY-MM-DD"
+  blockId: string; // a block id, or "all"
+  type: FieldActivityType;
+  title: string;
+  status: "Done" | "Planned";
+  product?: string; // manure, fertiliser, medicine or pesticide used
+  dose?: string;
+  waitDays?: number; // days before the leaf is safe to feed silkworms after a spray
+  defect?: string;
+  severity?: "Low" | "Moderate" | "High";
+  affected?: number; // % of leaves / area affected
+  notes?: string;
+  photo?: string; // small JPEG data URL of the leaf
+  aiFinding?: string;
 }
 
 export interface IrrigationSession {

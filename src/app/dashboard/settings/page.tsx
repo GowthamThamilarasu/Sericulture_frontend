@@ -13,6 +13,7 @@ import {
   CloudSun,
   Cpu,
   Droplets,
+  Egg,
   Fan,
   Leaf,
   Mail,
@@ -23,20 +24,25 @@ import {
   Router,
   Settings as SettingsIcon,
   ShieldCheck,
+  ShoppingBag,
   Smartphone,
   Sprout,
   Sun,
   Thermometer,
   Trash2,
+  UsersRound,
   Warehouse,
   Waves,
   Wifi,
   WifiOff,
   Wind,
+  Wrench,
   X,
 } from "lucide-react";
 
-import { DashboardPage, PageHeader } from "@/components/dashboard/page-kit";
+import { BatchSettings } from "@/components/dashboard/batch-settings";
+import { DeviceStore, ServiceCenter, TeamUsers } from "@/components/dashboard/settings-extras";
+import { DashboardPage, PageHeader, activeHighlight } from "@/components/dashboard/page-kit";
 
 // Matches the palette of the main dashboard page.
 const green = "var(--d-accent)";
@@ -194,7 +200,7 @@ function Segmented({ value, onChange, options }: { value: string; onChange: (val
           key={option}
           type="button"
           onClick={() => onChange(option)}
-          className={`flex-1 rounded-lg px-3 py-2 text-sm font-medium transition ${value === option ? "bg-[var(--d-accent)] text-[var(--d-on-accent)] shadow" : "text-[var(--d-muted)] hover:text-[var(--d-text)]"}`}
+          className={`flex-1 rounded-lg px-3 py-2 text-sm font-medium transition ${value === option ? "accent-fill" : "text-[var(--d-muted)] hover:text-[var(--d-text)]"}`}
         >
           {option}
         </button>
@@ -275,7 +281,11 @@ function writeSaved(data: Saved) {
 const tabs = [
   { value: "farm", label: "Farm", detail: "Land & plantation", icon: MapPin },
   { value: "shed", label: "Shed", detail: "Rearing & climate", icon: Warehouse },
-  { value: "devices", label: "Smart Devices", detail: "Sensors & controllers", icon: Cpu },
+  { value: "batch", label: "Silkworm Batch", detail: "Batch, breed & farm", icon: Egg },
+  { value: "devices", label: "Devices", detail: "Connected & new devices", icon: Cpu },
+  { value: "service", label: "Service Center", detail: "Notifications & requests", icon: Wrench },
+  { value: "store", label: "Device Store", detail: "Devices from Paari Seritech", icon: ShoppingBag },
+  { value: "users", label: "Users", detail: "Team & access", icon: UsersRound },
   { value: "alerts", label: "Alerts & System", detail: "Notifications", icon: Bell },
 ];
 
@@ -343,14 +353,14 @@ function SettingsView() {
             <Tabs.Trigger
               key={tab.value}
               value={tab.value}
-              className="group flex shrink-0 items-center gap-3 rounded-xl border border-transparent px-3 py-2.5 text-left transition hover:bg-[var(--d-chip-hover)] data-[state=active]:border-[var(--d-line)] data-[state=active]:bg-[var(--d-card)]"
+              className="group flex shrink-0 items-center gap-3 rounded-2xl border border-transparent px-3 py-2.5 text-left outline-none transition-all hover:bg-[var(--d-chip-hover)] focus-visible:ring-2 focus-visible:ring-[var(--d-accent)] data-[state=active]:accent-fill data-[state=active]:accent-glow"
             >
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--d-chip)] text-[var(--d-muted)] transition group-data-[state=active]:bg-[var(--d-accent)] group-data-[state=active]:text-[var(--d-on-accent)]">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[var(--d-accent-soft)] text-[var(--d-accent)] transition group-data-[state=active]:bg-white/20 group-data-[state=active]:text-white">
                 <tab.icon className="h-[18px] w-[18px]" />
               </span>
               <span>
-                <span className="block text-sm font-medium text-[var(--d-soft)] group-data-[state=active]:text-[var(--d-text)]">{tab.label}</span>
-                <span className="hidden text-xs text-[var(--d-muted)] lg:block">{tab.detail}</span>
+                <span className="block text-sm font-semibold text-[var(--d-text)] group-data-[state=active]:text-white">{tab.label}</span>
+                <span className="hidden text-xs text-[var(--d-muted)] group-data-[state=active]:text-white/80 lg:block">{tab.detail}</span>
               </span>
             </Tabs.Trigger>
           ))}
@@ -384,11 +394,7 @@ function SettingsView() {
                 <Field label="Shed size"><TextInput value={shed.size} onChange={shedField("size")} /></Field>
                 <Field label="Rearing capacity"><TextInput type="number" value={shed.rearingCapacity} onChange={shedField("rearingCapacity")} suffix="DFLs" /></Field>
               </div>
-              <div className="mt-5">
-                <Field label="Current instar">
-                  <Segmented value={shed.currentInstar} onChange={shedField("currentInstar")} options={["I", "II", "III", "IV", "V", "Spinning"]} />
-                </Field>
-              </div>
+              <p className="mt-5 text-xs text-[var(--d-muted)]">The batch being reared, its breed and instar are set under Silkworm Batch.</p>
             </Panel>
 
             <Panel icon={Thermometer} title="Climate targets" description="Alerts and automation act when readings leave these ranges.">
@@ -406,6 +412,12 @@ function SettingsView() {
                   <Segmented value={shed.ventilationMode} onChange={shedField("ventilationMode")} options={["Automatic", "Scheduled", "Manual"]} />
                 </Field>
               </div>
+            </Panel>
+          </Tabs.Content>
+
+          <Tabs.Content value="batch" className="space-y-6 outline-none">
+            <Panel icon={Egg} title="Silkworm batch" description="Pick the batch the Silkworm tab follows, add a new one, or change its number, farm, breed and dates. Saved straight away, separately from the other settings.">
+              <BatchSettings />
             </Panel>
           </Tabs.Content>
 
@@ -445,8 +457,8 @@ function SettingsView() {
                   {devices.map((device) => {
                     const Icon = typeIcon(device.type);
                     return (
-                      <div key={device.id} className="group flex items-start gap-3.5 rounded-xl border border-[var(--d-line)] bg-[var(--d-inset)] p-4 transition hover:border-[var(--d-line)]">
-                        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[var(--d-chip)] text-[var(--d-accent)]">
+                      <div key={device.id} className="group flex items-start gap-3.5 rounded-2xl border border-[var(--d-line)] bg-[var(--d-inset)] p-4 transition-all hover:-translate-y-0.5 hover:shadow-md">
+                        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[var(--d-accent-soft)] text-[var(--d-accent)]">
                           <Icon className="h-5 w-5" />
                         </span>
                         <div className="min-w-0 flex-1">
@@ -476,6 +488,18 @@ function SettingsView() {
                 </div>
               )}
             </section>
+          </Tabs.Content>
+
+          <Tabs.Content value="service" className="space-y-6 outline-none">
+            <ServiceCenter devices={devices.map((device) => device.name)} />
+          </Tabs.Content>
+
+          <Tabs.Content value="store" className="space-y-6 outline-none">
+            <DeviceStore />
+          </Tabs.Content>
+
+          <Tabs.Content value="users" className="space-y-6 outline-none">
+            <TeamUsers />
           </Tabs.Content>
 
           <Tabs.Content value="alerts" className="space-y-6 outline-none">
@@ -545,7 +569,7 @@ function SettingsView() {
         <button type="button" onClick={discard} className="rounded-xl px-4 py-2 text-sm font-medium text-[var(--d-soft)] transition hover:bg-[var(--d-chip-hover)]">
           Discard
         </button>
-        <button type="button" onClick={save} className="rounded-xl bg-[var(--d-accent)] px-4 py-2 text-sm font-semibold text-[var(--d-on-accent)] transition hover:opacity-90">
+        <button type="button" onClick={save} className="rounded-xl accent-fill px-4 py-2 text-sm font-semibold transition hover:opacity-90">
           Save changes
         </button>
       </div>
@@ -575,13 +599,14 @@ function AddDeviceDialog({ locations, onAdd }: { locations: string[]; onAdd: (de
       }}
     >
       <Dialog.Trigger asChild>
-        <button type="button" className="inline-flex items-center gap-2 rounded-xl bg-[var(--d-accent)] px-4 py-2.5 text-sm font-semibold text-[var(--d-on-accent)] transition hover:opacity-90">
+        <button type="button" className="inline-flex items-center gap-2 rounded-xl accent-fill px-4 py-2.5 text-sm font-semibold transition hover:opacity-90">
           <Plus className="h-4 w-4" /> Add device
         </button>
       </Dialog.Trigger>
-      <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 max-h-[90vh] w-[calc(100%-2rem)] max-w-2xl -translate-x-1/2 -translate-y-1/2 overflow-y-auto dash-card rounded-2xl border border-[var(--d-card-border)] bg-[var(--d-card)] p-6 text-[var(--d-text)] shadow-2xl [color-scheme:dark]">
+      {/* No portal: the window renders inside the dashboard so it keeps the light/dark theme colours. */}
+      <>
+        <Dialog.Overlay className="fixed inset-0 z-[65] bg-black/50 backdrop-blur-[2px]" />
+        <Dialog.Content className="fixed left-1/2 top-1/2 z-[66] max-h-[90vh] w-[calc(100%-2rem)] max-w-2xl -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-2xl border border-[var(--d-line)] bg-[var(--d-popup)] p-6 text-[var(--d-text)] shadow-2xl">
           <div className="flex items-start justify-between gap-4">
             <div>
               <Dialog.Title className="text-lg font-semibold">Add a smart device</Dialog.Title>
@@ -621,12 +646,12 @@ function AddDeviceDialog({ locations, onAdd }: { locations: string[]; onAdd: (de
                       key={type.name}
                       type="button"
                       onClick={() => field("type")(type.name)}
-                      className={`flex items-center gap-2.5 rounded-xl border p-3 text-left transition ${active ? "border-[var(--d-accent)] bg-[var(--d-accent-soft)]" : "border-[var(--d-line)] bg-[var(--d-inset)] hover:border-[var(--d-line)]"}`}
+                      className={`flex items-center gap-2.5 rounded-xl border p-3 text-left transition-all ${active ? activeHighlight : "border-[var(--d-line)] bg-[var(--d-inset)] hover:-translate-y-0.5 hover:shadow-md"}`}
                     >
-                      <type.icon className={`h-[18px] w-[18px] shrink-0 ${active ? "text-[var(--d-accent)]" : "text-[var(--d-muted)]"}`} />
+                      <type.icon className={`h-[18px] w-[18px] shrink-0 ${active ? "text-white" : "text-[var(--d-accent)]"}`} />
                       <span className="min-w-0">
-                        <span className="block truncate text-sm font-medium text-[var(--d-text)]">{type.name}</span>
-                        <span className="block truncate text-[11px] text-[var(--d-muted)]">{type.detail}</span>
+                        <span className={`block truncate text-sm font-medium ${active ? "text-white" : "text-[var(--d-text)]"}`}>{type.name}</span>
+                        <span className={`block truncate text-[11px] ${active ? "text-white/80" : "text-[var(--d-muted)]"}`}>{type.detail}</span>
                       </span>
                     </button>
                   );
@@ -645,13 +670,13 @@ function AddDeviceDialog({ locations, onAdd }: { locations: string[]; onAdd: (de
               <Dialog.Close type="button" className="rounded-xl px-4 py-2.5 text-sm font-medium text-[var(--d-soft)] transition hover:bg-[var(--d-chip-hover)]">
                 Cancel
               </Dialog.Close>
-              <button type="submit" className="inline-flex items-center gap-2 rounded-xl bg-[var(--d-accent)] px-5 py-2.5 text-sm font-semibold text-[var(--d-on-accent)] transition hover:opacity-90">
+              <button type="submit" className="inline-flex items-center gap-2 rounded-xl accent-fill px-5 py-2.5 text-sm font-semibold transition hover:opacity-90">
                 <Plus className="h-4 w-4" /> Add device
               </button>
             </div>
           </form>
         </Dialog.Content>
-      </Dialog.Portal>
+      </>
     </Dialog.Root>
   );
 }

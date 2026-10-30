@@ -22,7 +22,7 @@ export const toneColor: Record<Tone, string> = {
   muted: "var(--d-muted)",
 };
 
-const toneSoft: Record<Tone, string> = {
+export const toneSoft: Record<Tone, string> = {
   accent: "var(--d-tint-soft, var(--d-accent-soft))",
   warn: "var(--d-warn-soft)",
   danger: "var(--d-danger-soft)",
@@ -31,16 +31,23 @@ const toneSoft: Record<Tone, string> = {
 };
 
 export const buttonPrimary =
-  "inline-flex items-center justify-center gap-1.5 rounded-md bg-[var(--d-accent)] px-3 py-1.5 text-xs font-semibold text-[var(--d-on-accent)] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50";
+  "inline-flex items-center justify-center gap-1.5 rounded-md accent-fill px-3 py-1.5 text-xs font-semibold transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50";
 export const buttonSecondary =
   "inline-flex items-center justify-center gap-1.5 rounded-md bg-[var(--d-chip)] px-3 py-1.5 text-xs font-medium text-[var(--d-text)] transition-colors hover:bg-[var(--d-chip-hover)] disabled:cursor-not-allowed disabled:opacity-50";
 
+// Selected card (e.g. the Climate Control mode cards): the shared accent-fill with a larger glow. See globals.css.
+export const activeHighlight = "border-transparent accent-fill accent-glow";
+export const buttonGradient =
+  "inline-flex items-center justify-center gap-1.5 rounded-xl accent-fill font-semibold transition-all hover:-translate-y-px hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--d-accent)] focus-visible:ring-offset-2";
+
 export type PageTint = "plant" | "water" | "heat" | "soil" | "nutrient" | "air" | "light" | "alert" | "slate";
 
+// Every tab shares the green page background; `tint` is kept so tabs can be recoloured again later.
 export function DashboardPage({ tint, children }: { tint: PageTint; children: React.ReactNode }) {
+  void tint;
   return (
     <HistoryProvider>
-      <div className={`page-${tint} -m-4 min-h-[calc(100vh-65px)] space-y-8 bg-[var(--d-page)] p-4 text-[var(--d-text)] md:-m-6 md:p-6`}>{children}</div>
+      <div className={`page-plant -m-4 min-h-[calc(100vh-65px)] space-y-8 bg-[var(--d-page)] p-4 text-[var(--d-text)] md:-m-6 md:p-6`}>{children}</div>
     </HistoryProvider>
   );
 }
@@ -172,7 +179,7 @@ export function TabWidget({ title, icon, tint, action, tabs, className }: { titl
             <Tabs.Trigger
               key={tab.id}
               value={tab.id}
-              className="inline-flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-semibold text-[var(--d-muted)] outline-none transition-colors hover:text-[var(--d-text)] focus-visible:ring-2 focus-visible:ring-[var(--d-accent)] data-[state=active]:bg-[var(--d-popup)] data-[state=active]:text-[var(--d-text)] data-[state=active]:shadow-sm"
+              className="inline-flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-semibold text-[var(--d-muted)] outline-none transition-colors hover:text-[var(--d-text)] focus-visible:ring-2 focus-visible:ring-[var(--d-accent)] data-[state=active]:accent-fill"
             >
               <tab.icon className="h-3.5 w-3.5" aria-hidden="true" />
               {tab.label}
@@ -218,6 +225,34 @@ export function Stepper({ id, label, value, step, decimals, min = 0, max = Infin
           <Plus className="h-3.5 w-3.5" aria-hidden="true" />
         </button>
       </div>
+    </div>
+  );
+}
+
+export type PageView<T extends string> = { id: T; label: string; icon: Icon; count?: number | null };
+
+/** Row of buttons that switches a tab between whole views; pair each view with role="tabpanel" id={`${idPrefix}-view-${id}`}. */
+export function ViewTabs<T extends string>({ label, idPrefix, views, value, onChange }: { label: string; idPrefix: string; views: readonly PageView<T>[]; value: T; onChange: (value: T) => void }) {
+  return (
+    <div role="tablist" aria-label={label} className="flex gap-1 overflow-x-auto rounded-xl bg-[var(--d-chip)] p-1">
+      {views.map((item) => (
+        <button
+          key={item.id}
+          type="button"
+          role="tab"
+          id={`${idPrefix}-tab-${item.id}`}
+          aria-selected={value === item.id}
+          aria-controls={`${idPrefix}-view-${item.id}`}
+          onClick={() => onChange(item.id)}
+          className={`flex flex-1 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors ${
+            value === item.id ? "accent-fill shadow-sm" : "text-[var(--d-soft)] hover:bg-[var(--d-chip-hover)] hover:text-[var(--d-text)]"
+          }`}
+        >
+          <item.icon className="h-4 w-4" aria-hidden="true" />
+          {item.label}
+          {item.count ? <span className={`rounded-full px-2 py-0.5 text-[11px] ${value === item.id ? "bg-black/15" : "bg-[var(--d-chip)]"}`}>{item.count}</span> : null}
+        </button>
+      ))}
     </div>
   );
 }

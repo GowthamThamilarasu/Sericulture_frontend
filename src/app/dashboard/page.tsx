@@ -3,12 +3,12 @@
 import { useState } from "react";
 import { MapPin, Sprout, Warehouse } from "lucide-react";
 
+import { ClimateStatusIcons } from "@/components/dashboard/climate-control";
 import { FertigationBoard } from "@/components/dashboard/fertigation-board";
 import { HistoryProvider } from "@/components/dashboard/history-dialog";
 import {
   AlertList,
   BigValue,
-  DeviceTile,
   DoorTile,
   ReadingTile,
   SectionHeader,
@@ -21,13 +21,11 @@ import {
   historyFor,
   reading,
   shedAlerts,
-  shedDevices,
-  shedSetpoints,
   soilReadings,
 } from "@/components/dashboard/monitor-widgets";
 import { ValveControl } from "@/components/dashboard/valve-control";
 import { Co2Icon, HumidityIcon, LightSensorIcon, Nh3Icon, TemperatureIcon } from "@/components/dashboard/sensor-icons";
-import { actuators, demoFarm, demoShed } from "@/data/mock";
+import { demoFarm, demoShed } from "@/data/mock";
 
 const airReadings = [
   { sensor: reading("NH3"), label: "NH₃ (Ammonia)", icon: Nh3Icon },
@@ -37,14 +35,8 @@ const airReadings = [
 
 
 export default function DashboardHomePage() {
-  const [setpoints, setSetpoints] = useState(() => Object.fromEntries([...farmSetpoints, ...shedSetpoints].map((item) => [item.key, item.value])));
-  const [devices, setDevices] = useState(() => Object.fromEntries(actuators.map((item) => [item.id, item.status === "ON"])));
-
+  const [setpoints, setSetpoints] = useState(() => Object.fromEntries(farmSetpoints.map((item) => [item.key, item.value])));
   const updateSetpoint = (key: string, value: number) => setSetpoints((current) => ({ ...current, [key]: value }));
-  const deviceTiles = (names: string[]) =>
-    actuators
-      .filter((device) => names.includes(device.name))
-      .map((device) => <DeviceTile key={device.id} name={device.name} on={devices[device.id]} onChange={() => setDevices((current) => ({ ...current, [device.id]: !current[device.id] }))} />);
 
   const soil = reading("Soil Moisture");
   const temperature = reading("Temperature");
@@ -98,9 +90,7 @@ export default function DashboardHomePage() {
                 <DoorTile />
               </div>
 
-              <div className="grid grid-cols-2 gap-4 sm:col-span-2 sm:grid-cols-3">{deviceTiles(shedDevices)}</div>
-
-              <SetpointPanel items={shedSetpoints} values={setpoints} onChange={updateSetpoint} className="sm:col-span-2" />
+              <ClimateStatusIcons className="sm:col-span-2" />
               <AlertList items={shedAlerts} className="sm:col-span-2" />
             </div>
           </section>

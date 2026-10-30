@@ -83,7 +83,7 @@ export function ModeSelector({ name, className }: { name: string; className?: st
               title={`${item.label}: ${item.detail}`}
               onClick={() => setControllerMode(name, item.value)}
               className={`flex h-8 w-8 items-center justify-center rounded-full transition-colors ${
-                active ? "bg-[var(--d-accent)] text-[var(--d-on-accent)]" : "text-[var(--d-muted)] hover:bg-[var(--d-chip-hover)] hover:text-[var(--d-text)]"
+                active ? "accent-fill" : "text-[var(--d-muted)] hover:bg-[var(--d-chip-hover)] hover:text-[var(--d-text)]"
               }`}
             >
               <item.icon className="h-4 w-4" aria-hidden="true" />

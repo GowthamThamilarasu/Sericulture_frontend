@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import * as Dialog from "@radix-ui/react-dialog";
 import { Bell, Check, EyeOff, Info, OctagonAlert, Siren, Sparkles, TriangleAlert, Volume2, VolumeX, X } from "lucide-react";
 
 import { alertItems } from "@/data/mock";
+import { activeHighlight, buttonGradient } from "@/components/dashboard/page-kit";
 import type { AlertItem } from "@/types";
 
 export type NotificationState = "new" | "read" | "ignored";
@@ -28,6 +29,7 @@ const severityColor: Record<string, string> = {
   "Sensor Failure": "var(--d-danger)",
   Information: "var(--d-info)",
   "AI Recommendation": "var(--d-accent)",
+  Automation: "var(--d-accent)",
 };
 
 /* ---------- Store: one list shared by the bell, the popups and the alert center ---------- */
@@ -39,10 +41,11 @@ const storageKey = "dashboard-notifications";
 const listeners = new Set<() => void>();
 const serverStore: Store = { items: alertItems.map((item) => ({ ...item, state: "new" })), hidden: [], started: false };
 let store: Store | null = null;
+// Saved read/ignored choices, kept for pushed notifications too (they come back after a reload).
+let saved: Record<string, NotificationState> = {};
 
 function loadStore(): Store {
   if (store) return store;
-  let saved: Record<string, NotificationState> = {};
   try {
     saved = JSON.parse(localStorage.getItem(storageKey) ?? "{}");
   } catch {
@@ -54,8 +57,9 @@ function loadStore(): Store {
 
 function update(next: Store) {
   store = next;
+  saved = { ...saved, ...Object.fromEntries(next.items.filter((item) => item.state !== "new").map((item) => [item.id, item.state])) };
   try {
-    localStorage.setItem(storageKey, JSON.stringify(Object.fromEntries(next.items.filter((item) => item.state !== "new").map((item) => [item.id, item.state]))));
+    localStorage.setItem(storageKey, JSON.stringify(saved));
   } catch {
     // Storage blocked: changes hold until the page reloads.
   }
@@ -76,15 +80,29 @@ export function setNotificationState(id: string, state: NotificationState) {
   update({ ...current, items: current.items.map((item) => (item.id === id ? { ...item, state } : item)) });
 }
 
-// Closing a popup with × only hides it; the notification stays unread in the bell.
-function hidePopup(id: string) {
+// Popups tuck themselves into the bell after this long; they stay unread there.
+const popupMs = 5000;
+
+// Closing a popup with × (or letting it time out) only hides it; the notification stays unread in the bell.
+function hidePopup(...ids: string[]) {
   const current = loadStore();
-  update({ ...current, hidden: [...current.hidden, id] });
+  update({ ...current, hidden: [...current.hidden, ...ids] });
 }
 
 function startPopups() {
   const current = loadStore();
   if (!current.started) update({ ...current, started: true });
+}
+
+/**
+ * Adds notifications raised elsewhere in the dashboard (e.g. medication reminders). Each id is added once;
+ * a notification already read or ignored stays that way after a reload.
+ */
+export function pushNotifications(items: AlertItem[]) {
+  const current = loadStore();
+  const fresh = items.filter((item) => !current.items.some((existing) => existing.id === item.id));
+  if (!fresh.length) return;
+  update({ ...current, items: [...fresh.map((item) => ({ ...item, state: saved[item.id] ?? "new" })), ...current.items] });
 }
 
 export function sendTestWarning() {
@@ -147,14 +165,14 @@ function ActionButtons({ id, compact }: { id: string; compact?: boolean }) {
       <button
         type="button"
         onClick={() => setNotificationState(id, "read")}
-        className={`inline-flex items-center gap-1.5 rounded-lg bg-[var(--d-accent)] font-semibold text-[var(--d-on-accent)] hover:opacity-90 ${size}`}
+        className={`${buttonGradient} ${size}`}
       >
         <Check className="h-3.5 w-3.5" aria-hidden="true" /> Read
       </button>
       <button
         type="button"
         onClick={() => setNotificationState(id, "ignored")}
-        className={`inline-flex items-center gap-1.5 rounded-lg bg-[var(--d-chip)] font-medium text-[var(--d-text)] hover:bg-[var(--d-chip-hover)] ${size}`}
+        className={`inline-flex items-center gap-1.5 rounded-xl bg-[var(--d-chip)] font-medium text-[var(--d-text)] hover:bg-[var(--d-chip-hover)] ${size}`}
       >
         <EyeOff className="h-3.5 w-3.5" aria-hidden="true" /> Ignore
       </button>
@@ -165,7 +183,8 @@ function ActionButtons({ id, compact }: { id: string; compact?: boolean }) {
 export function NotificationBell() {
   const { items } = useNotifications();
   const [open, setOpen] = useState(false);
-  const visible = items.filter((item) => item.state !== "ignored");
+  const [showAll, setShowAll] = useState(false);
+  const visible = items.filter((item) => (showAll ? item.state !== "ignored" : item.state === "new"));
   const unread = items.filter((item) => item.state === "new").length;
 
   return (
@@ -189,10 +208,27 @@ export function NotificationBell() {
           <div className="absolute right-0 top-12 z-50 w-[min(24rem,calc(100vw-2rem))] overflow-hidden rounded-xl border border-[var(--d-line)] bg-[var(--d-popup)] text-[var(--d-text)] shadow-2xl">
             <div className="flex items-center justify-between border-b border-[var(--d-line)] px-4 py-3">
               <div className="text-sm font-semibold">Notifications</div>
-              <div className="text-xs text-[var(--d-muted)]">{unread} unread</div>
+              <div role="group" aria-label="Show" className="flex gap-0.5 rounded-full bg-[var(--d-chip)] p-0.5 text-xs font-semibold">
+                {[
+                  { all: false, label: `Unread ${unread}` },
+                  { all: true, label: "All" },
+                ].map((option) => (
+                  <button
+                    key={option.label}
+                    type="button"
+                    aria-pressed={showAll === option.all}
+                    onClick={() => setShowAll(option.all)}
+                    className={`rounded-full px-3 py-1 transition-colors ${
+                      showAll === option.all ? activeHighlight : "text-[var(--d-muted)] hover:text-[var(--d-text)]"
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
             </div>
             <div className="max-h-[60vh] divide-y divide-[var(--d-line)] overflow-y-auto">
-              {visible.length === 0 && <div className="px-4 py-8 text-center text-sm text-[var(--d-muted)]">Nothing here</div>}
+              {visible.length === 0 && <div className="px-4 py-8 text-center text-sm text-[var(--d-muted)]">{showAll ? "Nothing here" : "You're all caught up"}</div>}
               {visible.map((item) => {
                 const Icon = severityIcon[item.severity] ?? Info;
                 return (
@@ -268,42 +304,29 @@ export function NotificationPopups() {
     return () => window.clearInterval(timer);
   }, [dangerId, muted]);
 
+  // Every popup waiting when the timer starts, shown or queued, tucks into the bell together; the warning window too,
+  // which stops the siren. Later arrivals get their own timer. Timers survive re-renders and are cleared on unmount.
+  const scheduled = useRef(new Map<string, number>());
+  const pendingIds = pending.map((item) => item.id).join(",");
+  useEffect(() => {
+    const fresh = pendingIds.split(",").filter((id) => id && !scheduled.current.has(id));
+    if (!fresh.length) return;
+    const timer = window.setTimeout(() => hidePopup(...fresh), popupMs);
+    fresh.forEach((id) => scheduled.current.set(id, timer));
+  }, [pendingIds]);
+  useEffect(() => {
+    const timers = scheduled.current;
+    return () => timers.forEach((timer) => window.clearTimeout(timer));
+  }, []);
+
   const DangerIcon = danger ? (severityIcon[danger.severity] ?? TriangleAlert) : TriangleAlert;
 
   return (
     <>
       <div className="pointer-events-none fixed right-4 top-20 z-[60] flex w-[min(22rem,calc(100vw-2rem))] flex-col gap-3" aria-live="polite">
-        {toasts.map((item) => {
-          const Icon = severityIcon[item.severity] ?? Info;
-          const color = severityColor[item.severity] ?? "var(--d-info)";
-          return (
-            <div
-              key={item.id}
-              role="status"
-              className="toast-enter pointer-events-auto overflow-hidden rounded-xl border border-[var(--d-line)] bg-[var(--d-popup)] text-[var(--d-text)] shadow-2xl"
-              style={{ borderTop: `3px solid ${color}` }}
-            >
-              <div className="flex items-start gap-3 p-4">
-                <Icon className="mt-0.5 h-5 w-5 shrink-0" style={{ color }} aria-hidden="true" />
-                <div className="min-w-0 flex-1">
-                  <div className="text-[10px] font-semibold uppercase tracking-[0.15em]" style={{ color }}>
-                    {item.severity} · {item.location}
-                  </div>
-                  <div className="mt-1 text-sm font-semibold">
-                    {item.parameter}: {item.value}
-                  </div>
-                  <div className="mt-1 text-xs leading-5 text-[var(--d-soft)]">{item.recommendedAction}</div>
-                  <div className="mt-3">
-                    <ActionButtons id={item.id} compact />
-                  </div>
-                </div>
-                <button type="button" onClick={() => hidePopup(item.id)} aria-label="Close popup" className="rounded-md p-1 text-[var(--d-muted)] hover:bg-[var(--d-chip)] hover:text-[var(--d-text)]">
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-          );
-        })}
+        {toasts.map((item) => (
+          <Toast key={item.id} item={item} />
+        ))}
       </div>
 
       <Dialog.Root open={danger !== null}>
@@ -344,10 +367,52 @@ export function NotificationPopups() {
                   <ActionButtons id={danger.id} />
                 </div>
               </div>
+              <Countdown key={danger.id} color="rgb(220 38 38)" />
             </Dialog.Content>
           </>
         )}
       </Dialog.Root>
     </>
+  );
+}
+
+function Countdown({ color }: { color: string }) {
+  return (
+    <div className="h-1 bg-[var(--d-chip)]" aria-hidden="true">
+      <div className="popup-countdown h-full" style={{ backgroundColor: color, "--popup-ms": `${popupMs}ms` } as React.CSSProperties} />
+    </div>
+  );
+}
+
+function Toast({ item }: { item: Notification }) {
+  const Icon = severityIcon[item.severity] ?? Info;
+  const color = severityColor[item.severity] ?? "var(--d-info)";
+
+  return (
+    <div
+      role="status"
+      className="toast-enter pointer-events-auto overflow-hidden rounded-xl border border-[var(--d-line)] bg-[var(--d-popup)] text-[var(--d-text)] shadow-2xl"
+      style={{ borderTop: `3px solid ${color}` }}
+    >
+      <div className="flex items-start gap-3 p-4">
+        <Icon className="mt-0.5 h-5 w-5 shrink-0" style={{ color }} aria-hidden="true" />
+        <div className="min-w-0 flex-1">
+          <div className="text-[10px] font-semibold uppercase tracking-[0.15em]" style={{ color }}>
+            {item.severity} · {item.location}
+          </div>
+          <div className="mt-1 text-sm font-semibold">
+            {item.parameter}: {item.value}
+          </div>
+          <div className="mt-1 text-xs leading-5 text-[var(--d-soft)]">{item.recommendedAction}</div>
+          <div className="mt-3">
+            <ActionButtons id={item.id} compact />
+          </div>
+        </div>
+        <button type="button" onClick={() => hidePopup(item.id)} aria-label="Close popup" className="rounded-md p-1 text-[var(--d-muted)] hover:bg-[var(--d-chip)] hover:text-[var(--d-text)]">
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+      <Countdown color={color} />
+    </div>
   );
 }

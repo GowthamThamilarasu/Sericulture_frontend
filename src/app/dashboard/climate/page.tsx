@@ -1,11 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import { ChartLine, CloudDrizzle, Fan, Heater, MonitorCog, Snowflake, Wind } from "lucide-react";
+import { ChartLine, Fan, MonitorCog, SlidersHorizontal } from "lucide-react";
 
-import { Widget } from "@/components/dashboard/dashboard-widgets";
+import { ClimateEquipment, ClimateModeSwitch, useClimate } from "@/components/dashboard/climate-control";
 import { ReadingTile, SectionHeader, SetpointPanel, reading, shedSetpoints } from "@/components/dashboard/monitor-widgets";
-import { ControlRow, DashboardPage, PageHeader, TrendChart } from "@/components/dashboard/page-kit";
+import { DashboardPage, PageHeader, TrendChart } from "@/components/dashboard/page-kit";
 import { Co2Icon, HumidityIcon, LightSensorIcon, Nh3Icon, TemperatureIcon } from "@/components/dashboard/sensor-icons";
 import { demoShed, temperatureHistory } from "@/data/mock";
 
@@ -17,18 +16,18 @@ const climateReadings = [
   { sensor: reading("Light"), label: "Light", icon: LightSensorIcon },
 ];
 
-const equipment = [
-  { group: "Ventilation", icon: Wind, items: [{ name: "Fan Stage 1", icon: Fan, status: "Running" }, { name: "Fan Stage 2", icon: Fan, status: "Off" }, { name: "Circulation Fan", icon: Wind, status: "Running" }] },
-  { group: "Humidity", icon: CloudDrizzle, items: [{ name: "Fogger", icon: CloudDrizzle, status: "Off" }, { name: "Humidifier", icon: CloudDrizzle, status: "Off" }] },
-  { group: "Temperature", icon: Heater, items: [{ name: "Heater", icon: Heater, status: "Off" }, { name: "Cooling", icon: Snowflake, status: "Off" }] },
-];
-
+// The only place climate equipment is controlled; other tabs show its status as icons.
 export default function ClimatePage() {
-  const [setpoints, setSetpoints] = useState(() => Object.fromEntries(shedSetpoints.map((item) => [item.key, item.value])));
+  const { mode, limits, setLimit } = useClimate();
 
   return (
     <DashboardPage tint="heat">
       <PageHeader icon={MonitorCog} eyebrow="Climate Control" title="Operational climate management" detail={`${demoShed.name} · ${demoShed.instar}`} />
+
+      <section aria-label="Control mode">
+        <SectionHeader icon={SlidersHorizontal} title="Control Mode" detail="How the shed's climate equipment is run · applies to every device below" />
+        <ClimateModeSwitch />
+      </section>
 
       <section aria-label="Climate readings">
         <SectionHeader icon={TemperatureIcon} title="Shed Climate" detail="Live readings · tap a card for its history" />
@@ -40,24 +39,18 @@ export default function ClimatePage() {
       </section>
 
       <section aria-label="Climate equipment">
-        <SectionHeader icon={Fan} title="Equipment" detail="Choose how each device is run: Auto, Semi or Manual" />
-        <div className="grid items-start gap-4 lg:grid-cols-3">
-          {equipment.map((group) => (
-            <Widget key={group.group} title={group.group} icon={group.icon}>
-              <div className="space-y-3">
-                {group.items.map((item) => (
-                  <ControlRow key={item.name} {...item} tone={item.status === "Running" ? "accent" : "muted"} />
-                ))}
-              </div>
-            </Widget>
-          ))}
-        </div>
+        <SectionHeader
+          icon={Fan}
+          title="Equipment"
+          detail={mode === "auto" ? "Running automatically from the readings and limits" : mode === "semi" ? "Review the suggested changes, then approve or keep" : "Switch each device on or off"}
+        />
+        <ClimateEquipment />
       </section>
 
       <section aria-label="Limits and trend">
         <SectionHeader icon={ChartLine} title="Limits & Trend" detail="Targets the climate equipment works to, and today's temperature" />
         <div className="grid items-start gap-4 lg:grid-cols-2">
-          <SetpointPanel items={shedSetpoints} values={setpoints} onChange={(key, value) => setSetpoints((current) => ({ ...current, [key]: value }))} />
+          <SetpointPanel items={shedSetpoints} values={limits} onChange={setLimit} />
           <TrendChart id="climateTemperature" title="Temperature" unit="°C" data={temperatureHistory} tone="warn" icon={TemperatureIcon} />
         </div>
       </section>

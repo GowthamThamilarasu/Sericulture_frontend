@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Activity, CalendarClock, ChartLine, CloudRain, CloudSun, Droplets, Faucet, Gauge, PlugZap, ShieldCheck, SlidersVertical, Sprout, Waves } from "lucide-react";
+import { Activity, CalendarClock, ChartLine, CircleGauge, CloudRain, CloudSun, Droplets, Faucet, Gauge, PlugZap, ShieldCheck, Sprout, Waves } from "lucide-react";
 
 import { EnergyPanel, ProtectionPanel, SupplyPanel, supplyStatus, usePowerFeed } from "@/components/dashboard/farm-power";
 import { FertigationBoard } from "@/components/dashboard/fertigation-board";
@@ -10,7 +10,7 @@ import {
   AlertList,
   ReadingTile,
   SectionHeader,
-  SetpointPanel,
+  type SetpointBinding,
   SoilMoistureGauge,
   WaterTankGauge,
   farmAlerts,
@@ -23,11 +23,12 @@ import { SoilEcIcon, SoilMoistureIcon, TemperatureIcon, WaterLevelIcon } from "@
 import { ValveControl } from "@/components/dashboard/valve-control";
 import { demoFarm, ecHistory, soilMoistureHistory, temperatureHistory, waterLevelHistory } from "@/data/mock";
 
-// Field readings with no history or set point: water quality, flow and weather.
+// Field readings with no history or set point: water quality, flow, line pressure and weather.
 const fieldStatus = [
   { label: "Water Temp.", value: "26.1", unit: "°C", icon: TemperatureIcon },
   { label: "Water EC", value: "0.65", unit: "mS/cm", icon: Activity },
   { label: "Flow Meter", value: "4.1", unit: "L/min", icon: Gauge },
+  { label: "Line Pressure", value: "1.8", unit: "bar", icon: CircleGauge, note: "Irrigation line" },
   { label: "Rain", value: "No", icon: CloudRain },
   { label: "Weather", value: "Mild", icon: CloudSun },
 ];
@@ -45,23 +46,27 @@ export default function FarmMonitorPage() {
   const power = usePowerFeed();
   const supply = supplyStatus(power);
   const block = reading("Soil Moisture")?.location ?? "Block A";
+  const setpoint = (key: string): SetpointBinding | undefined => {
+    const item = farmSetpoints.find((entry) => entry.key === key);
+    return item && { item, value: setpoints[key], onChange: (value) => setSetpoints((current) => ({ ...current, [key]: value })) };
+  };
 
   return (
     <DashboardPage tint="plant">
       <PageHeader icon={Sprout} eyebrow="Farm Monitor" title="Field condition overview" detail={`${demoFarm.name} · Mulberry field · ${block} · ${demoFarm.acres} acres`} />
 
       <section aria-label="Field sensors">
-        <SectionHeader icon={SoilMoistureIcon} title="Field Sensors" detail={`Live soil and water readings · ${block} · tap a card for its history`} />
+        <SectionHeader icon={SoilMoistureIcon} title="Field Sensors" detail={`Live soil and water readings · ${block} · tap a card for its history, or its set point chip to change it`} />
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <WaterTankGauge />
-          <SoilMoistureGauge />
-          <div className="grid grid-cols-3 gap-4 sm:col-span-2">
-            {soilReadings.map((item) => (
-              <ReadingTile key={item.label} {...item} />
+          <WaterTankGauge setpoint={setpoint("tank")} />
+          <SoilMoistureGauge setpoint={setpoint("soil")} />
+          <div className="grid grid-cols-1 gap-4 min-[480px]:grid-cols-3 sm:col-span-2">
+            {soilReadings.map(({ setpointKey, ...item }) => (
+              <ReadingTile key={item.label} {...item} setpoint={setpoint(setpointKey)} />
             ))}
           </div>
         </div>
-        <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-5">
+        <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-6">
           {fieldStatus.map((item) => (
             <StatTile key={item.label} {...item} />
           ))}
@@ -70,16 +75,14 @@ export default function FarmMonitorPage() {
 
       <section aria-label="Irrigation controls">
         <SectionHeader icon={Waves} title="Irrigation Controls" detail="Valves, timing schedules, water volumes and the pump's power supply" />
-        <div className="grid items-start gap-4 xl:grid-cols-3">
+        <div className="grid gap-4">
           <TabWidget
             title="Irrigation"
             icon={Waves}
-            className="xl:col-span-2"
             tabs={[
               { id: "valves", label: "Pump & Valves", icon: Faucet, content: <ValveControl embedded />, keepMounted: true },
               { id: "schedule", label: "Scheduler", icon: CalendarClock, content: <SchedulerPanel plan={plan} /> },
               { id: "volume", label: "Volume", icon: Droplets, content: <VolumePanel plan={plan} /> },
-              { id: "setpoints", label: "Set Points", icon: SlidersVertical, content: <SetpointPanel embedded items={farmSetpoints} values={setpoints} onChange={(key, value) => setSetpoints((current) => ({ ...current, [key]: value }))} /> },
             ]}
           />
           <TabWidget

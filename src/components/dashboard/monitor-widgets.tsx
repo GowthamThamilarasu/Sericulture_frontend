@@ -1,6 +1,8 @@
 "use client";
 
-import { AlertTriangle, CloudDrizzle, DoorClosed, DoorOpen, Fan, Faucet, Heater, Power, SlidersVertical, Waves } from "lucide-react";
+import { useState } from "react";
+import * as Dialog from "@radix-ui/react-dialog";
+import { AlertTriangle, CloudDrizzle, DoorClosed, DoorOpen, Fan, Faucet, Heater, Minus, Plus, Power, SlidersVertical, Waves, X } from "lucide-react";
 
 import { ModeSelector, useControllerMode } from "@/components/dashboard/controller-mode";
 import { useDashboardTheme } from "@/components/dashboard/dashboard-theme";
@@ -17,12 +19,147 @@ export const green = "var(--d-tint, var(--d-accent))";
 export const muted = "var(--d-muted)";
 export const amber = "var(--d-warn)";
 
-export type Setpoint = { key: string; label: string; unit: string; min: number; max: number; step: number; value: number; icon: Icon };
+export type Setpoint = { key: string; label: string; unit: string; min: number; max: number; step: number; value: number; icon: Icon; note?: string };
 
 export const farmSetpoints: Setpoint[] = [
-  { key: "soil", label: "Soil Moisture", unit: "%", min: 20, max: 45, step: 1, value: 32, icon: SoilMoistureIcon },
-  { key: "tank", label: "Tank Min.", unit: "%", min: 0, max: 100, step: 5, value: 30, icon: WaterLevelIcon },
+  { key: "soil", label: "Soil Moisture", unit: "%", min: 20, max: 45, step: 1, value: 32, icon: SoilMoistureIcon, note: "Irrigation starts when soil moisture drops below this." },
+  { key: "tank", label: "Tank Min.", unit: "%", min: 0, max: 100, step: 5, value: 30, icon: WaterLevelIcon, note: "The pump stops when the tank falls below this level." },
+  { key: "soilTemp", label: "Soil Temp. Max", unit: "°C", min: 20, max: 40, step: 0.5, value: 32, icon: SoilTemperatureIcon, note: "An alert is raised when soil temperature rises above this." },
+  { key: "soilEc", label: "Soil EC Target", unit: "mS/cm", min: 0.2, max: 2, step: 0.05, value: 1, icon: SoilEcIcon, note: "Fertigation doses toward this conductivity." },
+  { key: "soilPh", label: "Soil pH Target", unit: "pH", min: 5, max: 8, step: 0.1, value: 6.5, icon: SoilPhIcon, note: "An alert is raised when the root zone drifts away from this pH." },
 ];
+
+/** A set point wired to a sensor card: the chip in its header opens a popup to change it. */
+export type SetpointBinding = { item: Setpoint; value: number; onChange: (value: number) => void };
+
+const decimalsOf = (step: number) => (String(step).split(".")[1] ?? "").length;
+
+// Popup body, mounted only while open so it starts from the saved value each time.
+function SetpointForm({ binding, current, onDone }: { binding: SetpointBinding; current?: number; onDone: () => void }) {
+  const { item } = binding;
+  const decimals = decimalsOf(item.step);
+  const [raw, setRaw] = useState(String(binding.value));
+  const value = Number(raw);
+  const valid = raw.trim() !== "" && Number.isFinite(value) && value >= item.min && value <= item.max;
+  const nudge = (direction: 1 | -1) => {
+    const base = Number.isFinite(value) ? value : binding.value;
+    setRaw((Math.min(item.max, Math.max(item.min, base + direction * item.step))).toFixed(decimals));
+  };
+
+  return (
+    <>
+      <Dialog.Overlay className="fixed inset-0 z-[65] bg-black/50 backdrop-blur-[2px]" />
+      <Dialog.Content className="fixed left-1/2 top-1/2 z-[66] w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-[var(--d-line)] bg-[var(--d-popup)] p-5 text-[var(--d-text)] shadow-2xl">
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (!valid) return;
+            binding.onChange(Number(value.toFixed(decimals)));
+            onDone();
+          }}
+        >
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-start gap-2.5">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--d-accent-soft)]">
+                <item.icon className="h-4 w-4" style={{ color: green }} aria-hidden="true" />
+              </span>
+              <div>
+                <Dialog.Title className="text-lg font-semibold leading-tight">{item.label} set point</Dialog.Title>
+                <Dialog.Description className="mt-1 text-xs text-[var(--d-muted)]">{item.note ?? "The value automation works to."}</Dialog.Description>
+              </div>
+            </div>
+            <Dialog.Close aria-label="Cancel" className="rounded-lg p-2 text-[var(--d-muted)] hover:bg-[var(--d-chip)] hover:text-[var(--d-text)]">
+              <X className="h-5 w-5" />
+            </Dialog.Close>
+          </div>
+
+          <div className="mt-4 rounded-xl bg-[var(--d-card)] p-4">
+            <div className="flex items-center justify-between text-xs text-[var(--d-muted)]">
+              <label htmlFor={`setpoint-${item.key}`}>Set point</label>
+              {current !== undefined && (
+                <span>
+                  Now{" "}
+                  <span className="font-semibold tabular-nums text-[var(--d-text)]">
+                    {current} {item.unit}
+                  </span>
+                </span>
+              )}
+            </div>
+            <div className="mt-3 flex items-center justify-center gap-3">
+              <button type="button" onClick={() => nudge(-1)} aria-label="Decrease" className="flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--d-chip)] hover:bg-[var(--d-chip-hover)]">
+                <Minus className="h-4 w-4" />
+              </button>
+              <div className="flex items-baseline gap-1.5">
+                <input
+                  id={`setpoint-${item.key}`}
+                  type="number"
+                  inputMode="decimal"
+                  autoFocus
+                  min={item.min}
+                  max={item.max}
+                  step={item.step}
+                  value={raw}
+                  onChange={(event) => setRaw(event.target.value)}
+                  aria-invalid={!valid}
+                  className="w-24 rounded-lg border border-[var(--d-line)] bg-[var(--d-popup)] px-2 py-2 text-center text-2xl font-bold tabular-nums text-[var(--d-accent)] outline-none focus:border-[var(--d-accent)]"
+                />
+                <span className="text-sm font-semibold text-[var(--d-muted)]">{item.unit}</span>
+              </div>
+              <button type="button" onClick={() => nudge(1)} aria-label="Increase" className="flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--d-chip)] hover:bg-[var(--d-chip-hover)]">
+                <Plus className="h-4 w-4" />
+              </button>
+            </div>
+            <input
+              type="range"
+              aria-label={`${item.label} set point slider`}
+              min={item.min}
+              max={item.max}
+              step={item.step}
+              value={valid ? value : binding.value}
+              onChange={(event) => setRaw(Number(event.target.value).toFixed(decimals))}
+              className="mt-4 w-full cursor-pointer accent-[var(--d-accent)]"
+            />
+            <div className="flex justify-between text-[10px] text-[var(--d-muted)]">
+              <span>
+                {item.min} {item.unit}
+              </span>
+              <span>
+                {item.max} {item.unit}
+              </span>
+            </div>
+            {!valid && <div className="mt-2 text-center text-[11px] font-semibold text-[var(--d-danger)]">Enter a value from {item.min} to {item.max} {item.unit}</div>}
+          </div>
+
+          <div className="mt-5 flex justify-end gap-2">
+            <Dialog.Close className="rounded-lg bg-[var(--d-chip)] px-4 py-2 text-sm font-medium hover:bg-[var(--d-chip-hover)]">Cancel</Dialog.Close>
+            <button type="submit" disabled={!valid} className="rounded-lg accent-fill px-4 py-2 text-sm font-semibold hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50">
+              Save set point
+            </button>
+          </div>
+        </form>
+      </Dialog.Content>
+    </>
+  );
+}
+
+// Header chip on a sensor card showing its set point; opens the set point popup.
+export function SetpointChip({ binding, current }: { binding: SetpointBinding; current?: number }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <Dialog.Root open={open} onOpenChange={setOpen}>
+      <Dialog.Trigger
+        title={`${binding.item.label} set point · change`}
+        className="inline-flex items-center gap-1 rounded-full bg-[var(--d-accent-soft)] px-2 py-0.5 text-[11px] font-semibold tabular-nums text-[var(--d-accent)] transition-colors hover:accent-fill"
+      >
+        <SlidersVertical className="h-3 w-3" aria-hidden="true" />
+        {binding.value}
+        <span className="font-medium opacity-80">{binding.item.unit}</span>
+        <span className="sr-only">{binding.item.label} set point, change</span>
+      </Dialog.Trigger>
+      {open && <SetpointForm binding={binding} current={current} onDone={() => setOpen(false)} />}
+    </Dialog.Root>
+  );
+}
 
 export const shedSetpoints: Setpoint[] = [
   { key: "temp", label: "Max Temp.", unit: "°C", min: 20, max: 35, step: 0.5, value: 28, icon: TemperatureIcon },
@@ -74,9 +211,9 @@ export function historyFor(sensor: ReturnType<typeof reading>, label: string, ic
 }
 
 export const soilReadings = [
-  { sensor: reading("Soil Temperature"), label: "Soil Temp.", icon: SoilTemperatureIcon },
-  { sensor: reading("Soil EC"), label: "Soil EC", icon: SoilEcIcon },
-  { sensor: reading("Soil pH"), label: "Soil pH", icon: SoilPhIcon },
+  { sensor: reading("Soil Temperature"), label: "Soil Temp.", icon: SoilTemperatureIcon, setpointKey: "soilTemp" },
+  { sensor: reading("Soil EC"), label: "Soil EC", icon: SoilEcIcon, setpointKey: "soilEc" },
+  { sensor: reading("Soil pH"), label: "Soil pH", icon: SoilPhIcon, setpointKey: "soilPh" },
 ];
 
 export const farmAlerts = alertItems.filter((alert) => !alert.location.startsWith("Shed"));
@@ -118,10 +255,10 @@ export function BigValue({ title, icon, value, unit, note, warn, history }: { ti
   );
 }
 
-export function ReadingTile({ sensor, label, icon }: { sensor: ReturnType<typeof reading>; label: string; icon: Icon }) {
+export function ReadingTile({ sensor, label, icon, setpoint }: { sensor: ReturnType<typeof reading>; label: string; icon: Icon; setpoint?: SetpointBinding }) {
   const warn = sensor?.status === "Warning";
   return (
-    <Widget title={label} icon={icon} history={historyFor(sensor, label, icon)}>
+    <Widget title={label} icon={icon} history={historyFor(sensor, label, icon)} action={setpoint && <SetpointChip binding={setpoint} current={sensor?.value} />}>
       <div className="flex flex-1 flex-col items-center justify-center py-3 text-center">
         <div className="text-2xl font-bold sm:text-3xl" style={{ color: warn ? amber : green }}>
           {sensor?.value}
@@ -135,13 +272,13 @@ export function ReadingTile({ sensor, label, icon }: { sensor: ReturnType<typeof
   );
 }
 
-export function WaterTankGauge({ className }: { className?: string }) {
+export function WaterTankGauge({ className, setpoint }: { className?: string; setpoint?: SetpointBinding }) {
   const { palette } = useDashboardTheme();
   const tank = reading("Water Tank");
   const tankPct = tank ? tank.value : 0;
   const arc = Math.PI * 80;
   return (
-    <Widget title="Water Tank 01" icon={WaterLevelIcon} history={historyFor(tank, "Water Tank 01", WaterLevelIcon)} className={className}>
+    <Widget title="Water Tank 01" icon={WaterLevelIcon} history={historyFor(tank, "Water Tank 01", WaterLevelIcon)} className={className} action={setpoint && <SetpointChip binding={setpoint} current={tank?.value} />}>
       <div className="flex flex-1 flex-col items-center justify-center">
         <svg viewBox="0 0 200 118" className="w-full max-w-[260px]" role="img" aria-label={`Water tank level ${tankPct}%`}>
           <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke={palette.track} strokeWidth="34" />
@@ -164,12 +301,12 @@ export function WaterTankGauge({ className }: { className?: string }) {
   );
 }
 
-export function SoilMoistureGauge({ className }: { className?: string }) {
+export function SoilMoistureGauge({ className, setpoint }: { className?: string; setpoint?: SetpointBinding }) {
   const { palette } = useDashboardTheme();
   const soil = reading("Soil Moisture");
   const soilPct = soil ? soil.value : 0;
   return (
-    <Widget title="Soil Moisture" icon={SoilMoistureIcon} history={historyFor(soil, "Soil Moisture", SoilMoistureIcon)} className={className}>
+    <Widget title="Soil Moisture" icon={SoilMoistureIcon} history={historyFor(soil, "Soil Moisture", SoilMoistureIcon)} className={className} action={setpoint && <SetpointChip binding={setpoint} current={soil?.value} />}>
       <div className="flex flex-1 flex-col items-center justify-center">
         <svg viewBox="0 0 150 150" className="w-full max-w-[170px]" role="img" aria-label={`Soil moisture ${soilPct}%`}>
           <defs>

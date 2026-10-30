@@ -132,7 +132,7 @@ function TargetForm({ name, options, running, initial, onConfirm }: { name: stri
                     aria-checked={item.key === option.key}
                     onClick={() => setOptionKey(item.key)}
                     className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors ${
-                      item.key === option.key ? "bg-[var(--d-accent)] text-[var(--d-on-accent)]" : "bg-[var(--d-chip)] text-[var(--d-text)] hover:bg-[var(--d-chip-hover)]"
+                      item.key === option.key ? "accent-fill" : "bg-[var(--d-chip)] text-[var(--d-text)] hover:bg-[var(--d-chip-hover)]"
                     }`}
                   >
                     {item.label}
@@ -183,7 +183,7 @@ function TargetForm({ name, options, running, initial, onConfirm }: { name: stri
 
           <div className="mt-5 flex justify-end gap-2">
             <Dialog.Close className="rounded-lg bg-[var(--d-chip)] px-4 py-2 text-sm font-medium hover:bg-[var(--d-chip-hover)]">Cancel</Dialog.Close>
-            <button type="submit" disabled={!valid} className="rounded-lg bg-[var(--d-accent)] px-4 py-2 text-sm font-semibold text-[var(--d-on-accent)] hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50">
+            <button type="submit" disabled={!valid} className="rounded-lg accent-fill px-4 py-2 text-sm font-semibold hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50">
               {running ? "Update target" : "Turn on"}
             </button>
           </div>

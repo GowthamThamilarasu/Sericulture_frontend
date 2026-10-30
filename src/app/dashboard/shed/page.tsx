@@ -1,26 +1,23 @@
 "use client";
 
-import { useState } from "react";
-import { ChartLine, Gauge, Layers, SlidersHorizontal, Warehouse, Wind } from "lucide-react";
+import { ChartLine, Gauge, Layers, MonitorCog, Warehouse, Wind } from "lucide-react";
+
+import { ClimateStatusIcons } from "@/components/dashboard/climate-control";
 
 import { Widget } from "@/components/dashboard/dashboard-widgets";
 import {
   AlertList,
   BigValue,
-  DeviceTile,
   DoorTile,
   ReadingTile,
   SectionHeader,
-  SetpointPanel,
   historyFor,
   reading,
   shedAlerts,
-  shedDevices,
-  shedSetpoints,
 } from "@/components/dashboard/monitor-widgets";
 import { DashboardPage, InfoRow, PageHeader, Pill, StatTile, TrendChart } from "@/components/dashboard/page-kit";
 import { Co2Icon, HumidityIcon, LightSensorIcon, Nh3Icon, TemperatureIcon } from "@/components/dashboard/sensor-icons";
-import { actuators, demoShed, instarStages, temperatureHistory } from "@/data/mock";
+import { demoShed, instarStages, temperatureHistory } from "@/data/mock";
 
 const airReadings = [
   { sensor: reading("NH3"), label: "NH₃ (Ammonia)", icon: Nh3Icon },
@@ -32,8 +29,6 @@ const airReadings = [
 const activeStage = instarStages[instarStages.length - 1].stage;
 
 export default function ShedMonitorPage() {
-  const [setpoints, setSetpoints] = useState(() => Object.fromEntries(shedSetpoints.map((item) => [item.key, item.value])));
-  const [devices, setDevices] = useState(() => Object.fromEntries(actuators.map((item) => [item.id, item.status === "ON"])));
   const temperature = reading("Temperature");
   const humidity = reading("Relative Humidity");
 
@@ -60,16 +55,9 @@ export default function ShedMonitorPage() {
         </div>
       </section>
 
-      <section aria-label="Climate controls">
-        <SectionHeader icon={SlidersHorizontal} title="Climate Controls" detail="Fans, humidifier and heater, and the limits automation keeps the shed within" />
-        <div className="grid items-start gap-4 sm:grid-cols-3">
-          {actuators
-            .filter((device) => shedDevices.includes(device.name))
-            .map((device) => (
-              <DeviceTile key={device.id} name={device.name} on={devices[device.id]} onChange={() => setDevices((current) => ({ ...current, [device.id]: !current[device.id] }))} />
-            ))}
-          <SetpointPanel items={shedSetpoints} values={setpoints} onChange={(key, value) => setSetpoints((current) => ({ ...current, [key]: value }))} className="sm:col-span-3" />
-        </div>
+      <section aria-label="Climate status">
+        <SectionHeader icon={MonitorCog} title="Climate Status" detail="Fans, humidity and temperature equipment · controlled from Climate Control" />
+        <ClimateStatusIcons />
       </section>
 
       <section aria-label="Trends and alerts">

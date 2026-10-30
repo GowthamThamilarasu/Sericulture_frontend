@@ -5,6 +5,7 @@ import { Beaker, BookOpenCheck, Container, Gauge, RotateCw, Target, Zap } from "
 
 import { Widget } from "@/components/dashboard/dashboard-widgets";
 import { FertigationBoard } from "@/components/dashboard/fertigation-board";
+import { NutrientTanks } from "@/components/dashboard/fertigation-tanks";
 import { SectionHeader } from "@/components/dashboard/monitor-widgets";
 import { ControlRow, DashboardPage, InfoRow, PageHeader, Pill, StatTile, buttonPrimary, buttonSecondary } from "@/components/dashboard/page-kit";
 import { WaterLevelIcon } from "@/components/dashboard/sensor-icons";
@@ -33,6 +34,11 @@ export default function FertigationPage() {
           <StatTile label="Dose" value={recipe.dose} unit="mL" icon={Beaker} />
           <StatTile label="Recipe Status" value={recipe.status} icon={BookOpenCheck} />
         </div>
+      </section>
+
+      <section aria-label="Nutrient tanks">
+        <SectionHeader icon={Container} title="Nutrient Tanks" detail="Stock levels and available volume in each tank · tap a tank to refill it or change its settings" />
+        <NutrientTanks />
       </section>
 
       <section aria-label="Live nutrient readings">
