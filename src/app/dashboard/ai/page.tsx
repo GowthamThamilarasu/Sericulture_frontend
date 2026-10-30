@@ -13,7 +13,7 @@ type Category = "Irrigation" | "Fertigation" | "Mulberry" | "Silkworm";
 const detail: Record<string, { category: Category; confidence: number; impact: "High" | "Medium" | "Low"; horizon: string; metric: { value: string; label: string }; action: string; reasons: string[]; data: string[] }> = {
   ai1: {
     category: "Irrigation",
-    confidence: 86,
+    confidence: 84,
     impact: "High",
     horizon: "Next 8 hours",
     metric: { value: "8 h", label: "until soil reaches critical moisture" },
