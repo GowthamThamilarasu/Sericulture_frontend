@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { Activity, CalendarClock, ChartLine, CircleGauge, CloudRain, CloudSun, Droplets, Faucet, Gauge, PlugZap, ShieldCheck, Sprout, Waves } from "lucide-react";
 
 import { EnergyPanel, ProtectionPanel, SupplyPanel, supplyStatus, usePowerFeed } from "@/components/dashboard/farm-power";
@@ -10,11 +9,10 @@ import {
   AlertList,
   ReadingTile,
   SectionHeader,
-  type SetpointBinding,
   SoilMoistureGauge,
   WaterTankGauge,
   farmAlerts,
-  farmSetpoints,
+  SetpointsLink,
   reading,
   soilReadings,
 } from "@/components/dashboard/monitor-widgets";
@@ -41,28 +39,23 @@ const charts: TrendSeries[] = [
 ];
 
 export default function FarmMonitorPage() {
-  const [setpoints, setSetpoints] = useState(() => Object.fromEntries(farmSetpoints.map((item) => [item.key, item.value])));
   const plan = useIrrigationPlan();
   const power = usePowerFeed();
   const supply = supplyStatus(power);
   const block = reading("Soil Moisture")?.location ?? "Block A";
-  const setpoint = (key: string): SetpointBinding | undefined => {
-    const item = farmSetpoints.find((entry) => entry.key === key);
-    return item && { item, value: setpoints[key], onChange: (value) => setSetpoints((current) => ({ ...current, [key]: value })) };
-  };
 
   return (
     <DashboardPage tint="plant">
       <PageHeader icon={Sprout} eyebrow="Farm Monitor" title="Field condition overview" detail={`${demoFarm.name} · Mulberry field · ${block} · ${demoFarm.acres} acres`} />
 
       <section aria-label="Field sensors">
-        <SectionHeader icon={SoilMoistureIcon} title="Field Sensors" detail={`Live soil and water readings · ${block} · tap a card for its history, or its set point chip to change it`} />
+        <SectionHeader icon={SoilMoistureIcon} title="Field Sensors" detail={`Live soil and water readings · ${block} · tap a card for its history`} action={<SetpointsLink area="irrigation" />} />
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <WaterTankGauge setpoint={setpoint("tank")} />
-          <SoilMoistureGauge setpoint={setpoint("soil")} />
+          <WaterTankGauge />
+          <SoilMoistureGauge />
           <div className="grid grid-cols-1 gap-4 min-[480px]:grid-cols-3 sm:col-span-2">
-            {soilReadings.map(({ setpointKey, ...item }) => (
-              <ReadingTile key={item.label} {...item} setpoint={setpoint(setpointKey)} />
+            {soilReadings.map((item) => (
+              <ReadingTile key={item.label} {...item} />
             ))}
           </div>
         </div>

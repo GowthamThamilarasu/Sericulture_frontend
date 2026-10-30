@@ -1,29 +1,23 @@
 "use client";
 
-import { useState } from "react";
 import { MapPin, Sprout, Warehouse } from "lucide-react";
 
 import { ClimateStatusIcons } from "@/components/dashboard/climate-control";
 import { FertigationBoard } from "@/components/dashboard/fertigation-board";
 import { HistoryProvider } from "@/components/dashboard/history-dialog";
 import {
-  AlertList,
   BigValue,
   DoorTile,
   ReadingTile,
   SectionHeader,
-  SetpointPanel,
   SoilMoistureGauge,
   WaterTankGauge,
-  farmAlerts,
-  farmSetpoints,
   formatCoordinate,
   historyFor,
   reading,
-  shedAlerts,
   soilReadings,
 } from "@/components/dashboard/monitor-widgets";
-import { ValveControl } from "@/components/dashboard/valve-control";
+import { ValveStatusStrip } from "@/components/dashboard/valve-control";
 import { Co2Icon, HumidityIcon, LightSensorIcon, Nh3Icon, TemperatureIcon } from "@/components/dashboard/sensor-icons";
 import { demoFarm, demoShed } from "@/data/mock";
 
@@ -35,9 +29,6 @@ const airReadings = [
 
 
 export default function DashboardHomePage() {
-  const [setpoints, setSetpoints] = useState(() => Object.fromEntries(farmSetpoints.map((item) => [item.key, item.value])));
-  const updateSetpoint = (key: string, value: number) => setSetpoints((current) => ({ ...current, [key]: value }));
-
   const soil = reading("Soil Moisture");
   const temperature = reading("Temperature");
   const humidity = reading("Relative Humidity");
@@ -91,15 +82,14 @@ export default function DashboardHomePage() {
               </div>
 
               <ClimateStatusIcons className="sm:col-span-2" />
-              <AlertList items={shedAlerts} className="sm:col-span-2" />
             </div>
           </section>
 
           <section aria-label="Farm monitoring">
             <SectionHeader icon={Sprout} title="Farm Monitoring" detail={`Mulberry field · ${soil?.location ?? "Block A"} · ${demoFarm.acres} acres`} />
             <div className="grid gap-4 sm:grid-cols-2">
-              <WaterTankGauge />
-              <SoilMoistureGauge />
+              <WaterTankGauge compact />
+              <SoilMoistureGauge compact />
 
               <div className="grid grid-cols-3 gap-4 sm:col-span-2">
                 {soilReadings.map((item) => (
@@ -107,11 +97,9 @@ export default function DashboardHomePage() {
                 ))}
               </div>
 
-              <FertigationBoard className="sm:col-span-2" />
-              <ValveControl className="sm:col-span-2" />
+              <FertigationBoard compact className="sm:col-span-2" />
+              <ValveStatusStrip className="sm:col-span-2" />
 
-              <SetpointPanel items={farmSetpoints} values={setpoints} onChange={updateSetpoint} className="sm:col-span-2" />
-              <AlertList items={farmAlerts} className="sm:col-span-2" />
             </div>
           </section>
         </div>

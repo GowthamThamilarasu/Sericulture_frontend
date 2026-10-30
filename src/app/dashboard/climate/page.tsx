@@ -3,7 +3,7 @@
 import { ChartLine, Fan, MonitorCog, SlidersHorizontal } from "lucide-react";
 
 import { ClimateEquipment, ClimateModeSwitch, useClimate } from "@/components/dashboard/climate-control";
-import { ReadingTile, SectionHeader, SetpointPanel, reading, shedSetpoints } from "@/components/dashboard/monitor-widgets";
+import { ReadingTile, SectionHeader, SetpointsLink, reading } from "@/components/dashboard/monitor-widgets";
 import { DashboardPage, PageHeader, TrendChart } from "@/components/dashboard/page-kit";
 import { Co2Icon, HumidityIcon, LightSensorIcon, Nh3Icon, TemperatureIcon } from "@/components/dashboard/sensor-icons";
 import { demoShed, temperatureHistory } from "@/data/mock";
@@ -18,7 +18,7 @@ const climateReadings = [
 
 // The only place climate equipment is controlled; other tabs show its status as icons.
 export default function ClimatePage() {
-  const { mode, limits, setLimit } = useClimate();
+  const { mode } = useClimate();
 
   return (
     <DashboardPage tint="heat">
@@ -43,16 +43,14 @@ export default function ClimatePage() {
           icon={Fan}
           title="Equipment"
           detail={mode === "auto" ? "Running automatically from the readings and limits" : mode === "semi" ? "Review the suggested changes, then approve or keep" : "Switch each device on or off"}
+          action={<SetpointsLink area="shed" />}
         />
         <ClimateEquipment />
       </section>
 
-      <section aria-label="Limits and trend">
-        <SectionHeader icon={ChartLine} title="Limits & Trend" detail="Targets the climate equipment works to, and today's temperature" />
-        <div className="grid items-start gap-4 lg:grid-cols-2">
-          <SetpointPanel items={shedSetpoints} values={limits} onChange={setLimit} />
-          <TrendChart id="climateTemperature" title="Temperature" unit="°C" data={temperatureHistory} tone="warn" icon={TemperatureIcon} />
-        </div>
+      <section aria-label="Temperature trend">
+        <SectionHeader icon={ChartLine} title="Trend" detail="Today's shed temperature" />
+        <TrendChart id="climateTemperature" title="Temperature" unit="°C" data={temperatureHistory} tone="warn" icon={TemperatureIcon} />
       </section>
     </DashboardPage>
   );

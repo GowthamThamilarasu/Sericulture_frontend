@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useSyncExternalStore } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
-import { Droplets, PackagePlus, Settings2, X } from "lucide-react";
+import { Droplets, PackagePlus, Plus, Settings2, Trash2, X } from "lucide-react";
 
 import { useToday } from "@/components/dashboard/batch-store";
 import { pushNotifications } from "@/components/dashboard/notifications";
@@ -62,13 +62,21 @@ function subscribe(listener: () => void) {
 
 export function useNutrientTanks() {
   const tanks = useSyncExternalStore(subscribe, read, () => defaultTanks);
-  return { tanks, save: (tank: NutrientTank) => write(read().map((item) => (item.id === tank.id ? tank : item))) };
+  return {
+    tanks,
+    save: (tank: NutrientTank) => write(read().map((item) => (item.id === tank.id ? tank : item))),
+    add: (tank: NutrientTank) => write([...read(), tank]),
+    // An empty list would bring the demo tanks back on reload, so the last tank stays.
+    remove: (id: string) => read().length > 1 && write(read().filter((item) => item.id !== id)),
+  };
 }
 
 const pct = (tank: NutrientTank) => Math.max(0, Math.min(100, (tank.levelL / Math.max(tank.capacityL, 1)) * 100));
 const daysLeft = (tank: NutrientTank) => (tank.dailyUseL > 0 ? Math.floor(tank.levelL / tank.dailyUseL) : null);
 const isLow = (tank: NutrientTank) => pct(tank) < tank.lowPct;
 const litres = (value: number) => value.toLocaleString(undefined, { maximumFractionDigits: 1 });
+const field = "w-full rounded-lg border border-[var(--d-line)] bg-[var(--d-popup)] px-3 py-2 text-sm font-semibold text-[var(--d-text)] outline-none focus:border-[var(--d-accent)]";
+const fieldLabel = "mb-1.5 block text-xs font-semibold text-[var(--d-soft)]";
 
 // Tank drawing: the liquid rises with the level, with a slow wave on its surface.
 function TankGauge({ tank }: { tank: NutrientTank }) {
@@ -97,8 +105,9 @@ function TankGauge({ tank }: { tank: NutrientTank }) {
 }
 
 function TankDialog({ tank, onClose }: { tank: NutrientTank; onClose: () => void }) {
-  const { save } = useNutrientTanks();
+  const { tanks, save, remove } = useNutrientTanks();
   const today = useToday();
+  const [confirmRemove, setConfirmRemove] = useState(false);
   const [add, setAdd] = useState("");
   const [capacity, setCapacity] = useState(String(tank.capacityL));
   const [level, setLevel] = useState(String(tank.levelL));
@@ -106,8 +115,7 @@ function TankDialog({ tank, onClose }: { tank: NutrientTank; onClose: () => void
   const [lowPct, setLowPct] = useState(String(tank.lowPct));
   const [product, setProduct] = useState(tank.product);
   const space = Math.max(0, tank.capacityL - tank.levelL);
-  const field = "w-full rounded-lg border border-[var(--d-line)] bg-[var(--d-popup)] px-3 py-2 text-sm font-semibold text-[var(--d-text)] outline-none focus:border-[var(--d-accent)]";
-  const label = "mb-1.5 block text-xs font-semibold text-[var(--d-soft)]";
+  const label = fieldLabel;
   const added = Number(add);
   const settingsValid = Number(capacity) > 0 && Number(level) >= 0 && Number(level) <= Number(capacity) && Number(dailyUse) >= 0 && Number(lowPct) >= 0 && Number(lowPct) <= 90;
 
@@ -197,6 +205,119 @@ function TankDialog({ tank, onClose }: { tank: NutrientTank; onClose: () => void
             </button>
           </div>
         </form>
+
+        {tanks.length > 1 && (
+          <div className="mt-4 flex items-center justify-end gap-2">
+            {confirmRemove && <span className="mr-auto text-xs font-semibold text-[var(--d-danger-text)]">Remove the {tank.label} tank?</span>}
+            {confirmRemove && (
+              <button type="button" onClick={() => setConfirmRemove(false)} className={buttonSecondary}>
+                Keep
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => {
+                if (!confirmRemove) return setConfirmRemove(true);
+                remove(tank.id);
+                onClose();
+              }}
+              className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold text-[var(--d-danger-text)] hover:bg-[var(--d-chip)]"
+            >
+              <Trash2 className="h-4 w-4" aria-hidden="true" /> {confirmRemove ? "Remove" : "Remove tank"}
+            </button>
+          </div>
+        )}
+      </Dialog.Content>
+    </Dialog.Root>
+  );
+}
+
+function AddTankDialog({ onClose }: { onClose: () => void }) {
+  const { tanks, add } = useNutrientTanks();
+  const today = useToday();
+  const [name, setName] = useState("");
+  const [product, setProduct] = useState("");
+  const [capacity, setCapacity] = useState("");
+  const [level, setLevel] = useState("");
+  const [dailyUse, setDailyUse] = useState("");
+  const [lowPct, setLowPct] = useState("20");
+  const label = name.trim();
+  const taken = tanks.some((tank) => tank.label.toLowerCase() === label.toLowerCase());
+  const cap = Number(capacity);
+  const lvl = Number(level || 0);
+  const error = !label
+    ? "Give the tank a name."
+    : taken
+      ? `A tank called ${label} already exists.`
+      : !(cap > 0)
+        ? "Capacity must be more than 0 L."
+        : lvl < 0 || lvl > cap
+          ? "Current level must be between 0 and the capacity."
+          : Number(dailyUse || 0) < 0 || Number(lowPct) < 0 || Number(lowPct) > 90
+            ? "Daily use can't be negative; reminder 0–90%."
+            : null;
+
+  return (
+    <Dialog.Root open onOpenChange={(open) => !open && onClose()}>
+      <Dialog.Overlay className="fixed inset-0 z-[60] bg-black/55 backdrop-blur-sm" />
+      <Dialog.Content className="fixed left-1/2 top-1/2 z-[61] max-h-[calc(100vh-2rem)] w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-3xl border border-[var(--d-line)] bg-[var(--d-popup)] p-5 text-[var(--d-text)] shadow-2xl">
+        <div className="mb-4 flex items-start justify-between gap-3">
+          <div>
+            <Dialog.Title className="text-lg font-semibold">Add a tank</Dialog.Title>
+            <Dialog.Description className="mt-0.5 text-xs text-[var(--d-muted)]">A new stock tank feeding the dose pump</Dialog.Description>
+          </div>
+          <Dialog.Close aria-label="Close" className="rounded-lg p-2 text-[var(--d-muted)] hover:bg-[var(--d-chip)] hover:text-[var(--d-text)]">
+            <X className="h-5 w-5" />
+          </Dialog.Close>
+        </div>
+
+        <form
+          className="rounded-2xl border border-[var(--d-card-border)] bg-[var(--d-card)] p-4"
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (error) return;
+            add({
+              id: `tank-${Date.now().toString(36)}`,
+              label,
+              product: product.trim() || label,
+              capacityL: cap,
+              levelL: lvl,
+              dailyUseL: Number(dailyUse || 0),
+              lowPct: Number(lowPct),
+              lastFilled: lvl > 0 ? today : undefined,
+            });
+            onClose();
+          }}
+        >
+          <div className="grid grid-cols-2 gap-3">
+            <label className="block">
+              <span className={fieldLabel}>Tank name</span>
+              <input value={name} onChange={(event) => setName(event.target.value)} placeholder="e.g. Mg" maxLength={12} autoFocus className={field} />
+            </label>
+            <label className="block">
+              <span className={fieldLabel}>Product</span>
+              <input value={product} onChange={(event) => setProduct(event.target.value)} placeholder="e.g. Magnesium sulphate" className={field} />
+            </label>
+            {[
+              { name: "Capacity (L)", value: capacity, set: setCapacity, placeholder: "e.g. 300" },
+              { name: "Current level (L)", value: level, set: setLevel, placeholder: "0" },
+              { name: "Daily use (L)", value: dailyUse, set: setDailyUse, placeholder: "0" },
+              { name: "Remind below (%)", value: lowPct, set: setLowPct, placeholder: "20" },
+            ].map((item) => (
+              <label key={item.name} className="block">
+                <span className={fieldLabel}>{item.name}</span>
+                <input type="number" inputMode="decimal" min={0} value={item.value} onChange={(event) => item.set(event.target.value)} placeholder={item.placeholder} className={field} />
+              </label>
+            ))}
+          </div>
+          {error && (name || capacity) && <div className="mt-2 text-xs font-semibold text-[var(--d-danger-text)]">{error}</div>}
+          <div className="mt-4 flex justify-end gap-2">
+            <Dialog.Close className={buttonSecondary}>Cancel</Dialog.Close>
+            <button type="submit" disabled={!!error} className={buttonPrimary}>
+              Add tank
+            </button>
+          </div>
+        </form>
       </Dialog.Content>
     </Dialog.Root>
   );
@@ -205,6 +326,7 @@ function TankDialog({ tank, onClose }: { tank: NutrientTank; onClose: () => void
 export function NutrientTanks() {
   const { tanks } = useNutrientTanks();
   const [editing, setEditing] = useState<NutrientTank | null>(null);
+  const [adding, setAdding] = useState(false);
   const total = tanks.reduce((sum, tank) => sum + tank.levelL, 0);
   const capacity = tanks.reduce((sum, tank) => sum + tank.capacityL, 0);
   const low = tanks.filter(isLow);
@@ -246,8 +368,20 @@ export function NutrientTanks() {
             </button>
           );
         })}
+        <button
+          type="button"
+          onClick={() => setAdding(true)}
+          className="flex min-h-[18rem] flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-[var(--d-line)] p-4 text-center text-[var(--d-soft)] transition-colors hover:border-[var(--d-accent)] hover:text-[var(--d-accent)]"
+        >
+          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--d-chip)]">
+            <Plus className="h-6 w-6" aria-hidden="true" />
+          </span>
+          <span className="text-sm font-semibold">Add tank</span>
+          <span className="text-xs text-[var(--d-muted)]">Set up another stock tank</span>
+        </button>
       </div>
       {editing && <TankDialog tank={editing} onClose={() => setEditing(null)} />}
+      {adding && <AddTankDialog onClose={() => setAdding(false)} />}
     </div>
   );
 }

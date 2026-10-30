@@ -1,13 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import * as Dialog from "@radix-ui/react-dialog";
-import { Beaker, Blinds, Check, CloudDrizzle, Copy, Droplets, Fan, Faucet, FlaskConical, Heater, Layers, Lightbulb, PanelTop, Pencil, Plus, RotateCw, Snowflake, Warehouse, Waves, Wind, X, Zap } from "lucide-react";
+import { Beaker, Blinds, Check, CloudDrizzle, Copy, Droplets, Fan, Faucet, FlaskConical, Heater, Layers, Lightbulb, PanelTop, Pencil, Plus, RotateCw, SlidersVertical, Snowflake, Warehouse, Waves, Wind, X, Zap } from "lucide-react";
 
 import { type AutomationArea, type AutomationModel, type ModelValues, defaultValues, modelFields, useAutomationModels } from "@/components/dashboard/automation-models";
+import { useClimate } from "@/components/dashboard/climate-control";
 import { controllerModes, useControllerModes } from "@/components/dashboard/controller-mode";
 import { type Icon, Toggle, Widget } from "@/components/dashboard/dashboard-widgets";
-import { SectionHeader } from "@/components/dashboard/monitor-widgets";
+import { FertigationSetpoints } from "@/components/dashboard/fertigation-board";
+import { SectionHeader, SetpointPanel, farmSetpoints, shedSetpoints, useFarmSetpoints } from "@/components/dashboard/monitor-widgets";
 import { ControlRow, DashboardPage, PageHeader, StatTile, ViewTabs, buttonPrimary, buttonSecondary } from "@/components/dashboard/page-kit";
 import { WaterLevelIcon } from "@/components/dashboard/sensor-icons";
 
@@ -169,10 +172,43 @@ function ModelDialog({ area, model, template, onClose }: { area: AutomationArea;
   );
 }
 
+// ---- Set points: the one place each area's targets are changed ----
+
+const setpointDetail: Record<AutomationArea, string> = {
+  irrigation: "Field targets the pump, valves and alerts work to · used by Farm Monitor and Irrigation",
+  fertigation: "Nutrient target bands and dosing limits · used by Fertigation and Farm Monitor",
+  shed: "Limits the climate equipment works to · used by Climate Control and Shed",
+};
+
+function AreaSetpoints({ area }: { area: AutomationArea }) {
+  const farm = useFarmSetpoints();
+  const climate = useClimate();
+  if (area === "irrigation") return <SetpointPanel title="Field Set Points" items={farmSetpoints} values={farm.values} onChange={farm.set} />;
+  if (area === "shed") return <SetpointPanel title="Shed Limits" items={shedSetpoints} values={climate.limits} onChange={climate.setLimit} />;
+  return (
+    <Widget title="Nutrient Set Points" icon={SlidersVertical}>
+      <FertigationSetpoints />
+    </Widget>
+  );
+}
+
 // ---- Page ----
 
+const isArea = (value: string | null): value is AutomationArea => areas.some((item) => item.id === value);
+
+// The area can be picked by link (?area=shed), e.g. from the "Set points" links on other tabs.
 export default function AutomationCenterPage() {
-  const [areaId, setAreaId] = useState<AutomationArea>("irrigation");
+  return (
+    <Suspense fallback={null}>
+      <AutomationCenter />
+    </Suspense>
+  );
+}
+
+function AutomationCenter() {
+  const linked = useSearchParams().get("area");
+  const [picked, setAreaId] = useState<AutomationArea | null>(null);
+  const areaId = picked ?? (isArea(linked) ? linked : "irrigation");
   const { models, active, setActive } = useAutomationModels();
   const [editing, setEditing] = useState<{ model: AutomationModel | null; template?: AutomationModel } | null>(null);
   const area = areas.find((item) => item.id === areaId) ?? areas[0];
@@ -184,7 +220,7 @@ export default function AutomationCenterPage() {
 
   return (
     <DashboardPage tint="slate">
-      <PageHeader icon={Zap} eyebrow="Automation Center" title="Automation models and device control" detail="Save sets of automation settings as models, and switch between them for each area" />
+      <PageHeader icon={Zap} eyebrow="Automation Center" title="Automation models and device control" detail="Set points, automation models and device control for each area" />
 
       <ViewTabs label="Automation area" idPrefix="automation" views={views} value={area.id} onChange={setAreaId} />
 
@@ -250,6 +286,11 @@ export default function AutomationCenterPage() {
               <Plus className="h-6 w-6" aria-hidden="true" /> New model
             </button>
           </div>
+        </section>
+
+        <section aria-label="Set points">
+          <SectionHeader icon={SlidersVertical} title={`${area.label} Set Points`} detail={setpointDetail[area.id]} />
+          <AreaSetpoints area={area.id} />
         </section>
 
         <section aria-label="Devices">

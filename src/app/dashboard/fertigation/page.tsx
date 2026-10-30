@@ -6,7 +6,7 @@ import { Beaker, BookOpenCheck, Container, Gauge, RotateCw, Target, Zap } from "
 import { Widget } from "@/components/dashboard/dashboard-widgets";
 import { FertigationBoard } from "@/components/dashboard/fertigation-board";
 import { NutrientTanks } from "@/components/dashboard/fertigation-tanks";
-import { SectionHeader } from "@/components/dashboard/monitor-widgets";
+import { SectionHeader, SetpointsLink } from "@/components/dashboard/monitor-widgets";
 import { ControlRow, DashboardPage, InfoRow, PageHeader, Pill, StatTile, buttonPrimary, buttonSecondary } from "@/components/dashboard/page-kit";
 import { WaterLevelIcon } from "@/components/dashboard/sensor-icons";
 import { fertigationSessions } from "@/data/mock";
@@ -27,7 +27,7 @@ export default function FertigationPage() {
       <PageHeader icon={Gauge} eyebrow="Fertigation" title="Nutrient dosing and EC control" detail={`Active recipe: ${recipe.recipe}`} />
 
       <section aria-label="Dosing status">
-        <SectionHeader icon={Zap} title="Status" detail="Nutrient solution against the active recipe" />
+        <SectionHeader icon={Zap} title="Status" detail="Nutrient solution against the active recipe" action={<SetpointsLink area="fertigation" />} />
         <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
           <StatTile label="Current EC" value="0.72" unit="mS/cm" icon={Zap} tone="warn" note="Below target" />
           <StatTile label="Target EC" value={recipe.ecTarget} unit="mS/cm" icon={Target} />
@@ -37,7 +37,7 @@ export default function FertigationPage() {
       </section>
 
       <section aria-label="Nutrient tanks">
-        <SectionHeader icon={Container} title="Nutrient Tanks" detail="Stock levels and available volume in each tank · tap a tank to refill it or change its settings" />
+        <SectionHeader icon={Container} title="Nutrient Tanks" detail="Stock levels and available volume in each tank · tap a tank to refill it or change its settings, or add a new one" />
         <NutrientTanks />
       </section>
 

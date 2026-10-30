@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useState, useSyncExternalStore } from "react";
-import { Activity, ChartLine, Check, FlaskConical, Link2, RotateCcw, SlidersVertical } from "lucide-react";
+import { ChartLine, Check, FlaskConical, Link2, RotateCcw } from "lucide-react";
 
 import { useOpenHistory } from "@/components/dashboard/history-dialog";
-import { Pill, Stepper, TabWidget, buttonSecondary } from "@/components/dashboard/page-kit";
+import { Widget } from "@/components/dashboard/dashboard-widgets";
+import { SetpointsLink } from "@/components/dashboard/monitor-widgets";
+import { Pill, Stepper, buttonSecondary } from "@/components/dashboard/page-kit";
 import { fertigationReadings, fertigationSessions } from "@/data/mock";
 import type { FertigationReading } from "@/types";
 
@@ -78,13 +80,13 @@ export function useFertigationSetpoints() {
 
 const round = (value: number, decimals: number) => Number(value.toFixed(decimals));
 
-function LiveReadings({ values, ranges }: { values: Values; ranges: Record<Key, Range> }) {
+function LiveReadings({ values, ranges, compact }: { values: Values; ranges: Record<Key, Range>; compact?: boolean }) {
   const session = fertigationSessions[0];
   const openHistory = useOpenHistory();
 
   return (
     <>
-      <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+      <div className={`mb-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs ${compact ? "hidden" : ""}`}>
         <span className="rounded-full bg-[var(--d-accent-soft)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--d-accent)]">{session.status}</span>
         <span className="text-[var(--d-soft)]">{session.recipe}</span>
         <span className="text-[var(--d-muted)]">
@@ -92,7 +94,7 @@ function LiveReadings({ values, ranges }: { values: Values; ranges: Record<Key, 
         </span>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3" aria-live="off">
+      <div className={compact ? "grid grid-cols-3 gap-2 sm:grid-cols-6" : "grid grid-cols-2 gap-3 sm:grid-cols-3"} aria-live="off">
         {fertigationReadings.map((item) => {
           const value = values[item.key];
           const { min, max } = ranges[item.key];
@@ -115,7 +117,8 @@ function LiveReadings({ values, ranges }: { values: Values; ranges: Record<Key, 
                   floor: 0,
                 })
               }
-              className="rounded-md bg-[var(--d-inset)] p-3 text-left transition-colors hover:ring-2 hover:ring-[var(--d-accent)]"
+              title={compact ? `${item.name} · target ${min}–${max}` : undefined}
+              className={`rounded-md bg-[var(--d-inset)] text-left transition-colors hover:ring-2 hover:ring-[var(--d-accent)] ${compact ? "p-2" : "p-3"}`}
             >
               <div className="flex items-baseline justify-between gap-2">
                 <span className="text-sm font-bold text-[var(--d-text)]">{item.label}</span>
@@ -123,13 +126,13 @@ function LiveReadings({ values, ranges }: { values: Values; ranges: Record<Key, 
                   {status}
                 </span>
               </div>
-              <div className="truncate text-[10px] text-[var(--d-muted)]">{item.name}</div>
-              <div className="mt-2 text-2xl font-bold tabular-nums" style={{ color }}>
+              {!compact && <div className="truncate text-[10px] text-[var(--d-muted)]">{item.name}</div>}
+              <div className={`font-bold tabular-nums ${compact ? "mt-1 text-lg" : "mt-2 text-2xl"}`} style={{ color }}>
                 {value.toFixed(item.decimals)}
-                {item.unit && <span className="ml-1 text-xs font-medium text-[var(--d-muted)]">{item.unit}</span>}
+                {item.unit && !compact && <span className="ml-1 text-xs font-medium text-[var(--d-muted)]">{item.unit}</span>}
               </div>
-              <div className="mt-1 text-[10px] text-[var(--d-muted)]">
-                Target {min}–{max}
+              <div className="mt-1 truncate text-[10px] text-[var(--d-muted)]">
+                {compact ? item.unit || "\u00a0" : `Target ${min}–${max}`}
               </div>
               <span className="sr-only">Show {item.name} history</span>
             </button>
@@ -326,30 +329,45 @@ function SetpointEditor({ values, current }: { values: Values; current: Setpoint
   );
 }
 
-export function FertigationBoard({ className }: { className?: string }) {
+// Demo live feed, shared by the readings panel and the set point editor.
+function useLiveValues() {
   const [values, setValues] = useState(initialValues);
-  const current = useFertigationSetpoints();
-
   useEffect(() => {
     const timer = window.setInterval(() => setValues(nextValues), 2000);
     return () => window.clearInterval(timer);
   }, []);
+  return values;
+}
+
+/** Fertigation target bands and dosing limits. Shown on the Automation tab only. */
+export function FertigationSetpoints() {
+  const values = useLiveValues();
+  const current = useFertigationSetpoints();
+  return <SetpointEditor values={values} current={current} />;
+}
+
+/** Live nutrient readings against their target bands. The bands are set on the Automation tab. */
+/** `compact` (Overview) shows the six readings in one row of small tiles. */
+export function FertigationBoard({ className, compact }: { className?: string; compact?: boolean }) {
+  const values = useLiveValues();
+  const current = useFertigationSetpoints();
 
   return (
-    <TabWidget
+    <Widget
       title="Fertigation"
       icon={FlaskConical}
       className={className}
       action={
-        <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--d-accent)]">
-          <span className="h-2 w-2 rounded-full bg-[var(--d-accent)] motion-safe:animate-pulse" aria-hidden="true" /> Live
-          <ChartLine className="ml-1 h-4 w-4 text-[var(--d-muted)]" aria-hidden="true" />
+        <span className="flex items-center gap-3">
+          <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--d-accent)]">
+            <span className="h-2 w-2 rounded-full bg-[var(--d-accent)] motion-safe:animate-pulse" aria-hidden="true" /> Live
+            <ChartLine className="ml-1 h-4 w-4 text-[var(--d-muted)]" aria-hidden="true" />
+          </span>
+          <SetpointsLink area="fertigation" />
         </span>
       }
-      tabs={[
-        { id: "live", label: "Live", icon: Activity, content: <LiveReadings values={values} ranges={current.ranges} /> },
-        { id: "setpoints", label: "Set Points", icon: SlidersVertical, content: <SetpointEditor values={values} current={current} /> },
-      ]}
-    />
+    >
+      <LiveReadings values={values} ranges={current.ranges} compact={compact} />
+    </Widget>
   );
 }

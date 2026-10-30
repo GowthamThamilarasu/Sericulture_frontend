@@ -1,10 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import { CalendarClock, CheckCircle2, ChartLine, Clock, Droplets, Gauge, History, Target, Waves } from "lucide-react";
 
 import { Widget } from "@/components/dashboard/dashboard-widgets";
-import { SectionHeader, SetpointPanel, farmSetpoints, reading } from "@/components/dashboard/monitor-widgets";
+import { SectionHeader, SetpointsLink, reading, useFarmSetpoints } from "@/components/dashboard/monitor-widgets";
 import { SchedulerPanel, VolumePanel, useIrrigationPlan } from "@/components/dashboard/irrigation-planner";
 import { DashboardPage, InfoRow, PageHeader, Pill, StatTile, TabWidget, TrendChart } from "@/components/dashboard/page-kit";
 import { SoilMoistureIcon } from "@/components/dashboard/sensor-icons";
@@ -13,19 +12,19 @@ import { WaterSourceButton } from "@/components/dashboard/water-sources";
 import { irrigationHistory, irrigationSessions } from "@/data/mock";
 
 export default function IrrigationPage() {
-  const [setpoints, setSetpoints] = useState(() => Object.fromEntries(farmSetpoints.map((item) => [item.key, item.value])));
+  const { values: setpoints } = useFarmSetpoints();
   const soil = reading("Soil Moisture");
   const plan = useIrrigationPlan();
 
   return (
     <DashboardPage tint="water">
-      <PageHeader icon={Waves} eyebrow="Irrigation" title="Water delivery and schedule control" detail="Pump, field valves, watering schedules and soil moisture targets" />
+      <PageHeader icon={Waves} eyebrow="Irrigation" title="Water delivery and schedule control" detail="Pump, field valves and watering schedules" />
 
       <section aria-label="Irrigation status">
-        <SectionHeader icon={Gauge} title="Status" detail="Where the field is against its moisture target" />
+        <SectionHeader icon={Gauge} title="Status" detail="Where the field is against its moisture target" action={<SetpointsLink area="irrigation" />} />
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-5">
           <StatTile label="Soil Moisture" value={soil?.value ?? "–"} unit="%" icon={SoilMoistureIcon} note={soil?.location} />
-          <StatTile label="Target Moisture" value={setpoints.soil} unit="%" icon={Target} note="From the set point below" />
+          <StatTile label="Target Moisture" value={setpoints.soil} unit="%" icon={Target} note="Set on the Automation tab" />
           <StatTile label="Flow" value="4.1" unit="L/min" icon={Gauge} />
           <StatTile label="Next Recommended" value="17:45" icon={CalendarClock} tone="info" note="Today" />
           <WaterSourceButton />
@@ -33,11 +32,8 @@ export default function IrrigationPage() {
       </section>
 
       <section aria-label="Irrigation controls">
-        <SectionHeader icon={Droplets} title="Controls" detail="Run the pump and valves, and set the targets automation works to" />
-        <div className="grid items-start gap-4 xl:grid-cols-3">
-          <ValveControl className="xl:col-span-2" />
-          <SetpointPanel items={farmSetpoints} values={setpoints} onChange={(key, value) => setSetpoints((current) => ({ ...current, [key]: value }))} />
-        </div>
+        <SectionHeader icon={Droplets} title="Controls" detail="Run the pump and field valves" />
+        <ValveControl />
       </section>
 
       <section aria-label="Irrigation schedule">

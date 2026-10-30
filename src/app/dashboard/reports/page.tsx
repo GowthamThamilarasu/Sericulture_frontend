@@ -29,6 +29,7 @@ const backupKeys = [
   "irrigation-water-sources",
   "fertigation-tanks",
   "fertigation-setpoints",
+  "farm-setpoints",
   "automation-models",
   "climate-control",
   "controller-modes",

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import * as Dialog from "@radix-ui/react-dialog";
 import { ChevronRight, CircleGauge, Faucet, Gauge, Infinity as InfinityIcon, Maximize2, Waves, X } from "lucide-react";
 
@@ -356,5 +357,38 @@ export function ValveControl({ className, embedded }: { className?: string; embe
     >
       {body}
     </Widget>
+  );
+}
+
+/** One-line pump and valve status for the Overview, like the climate strip on the shed side. Controls are on the Irrigation tab. */
+export function ValveStatusStrip({ className }: { className?: string }) {
+  const pumpOn = actuators.find((item) => item.name === "Water Pump")?.status === "ON";
+  const open = farmValves.filter((valve) => valve.open);
+  const flow = open.reduce((sum, valve) => sum + valve.flowRate, 0);
+
+  return (
+    <div className={`dash-card flex flex-wrap items-center gap-3 rounded-xl border border-[var(--d-card-border)] bg-[var(--d-card)] p-3 ${className ?? ""}`}>
+      <span className="inline-flex items-center gap-2 rounded-full bg-[var(--d-accent-soft)] px-3 py-1.5 text-xs font-semibold text-[var(--d-accent)]">
+        <Waves className={`h-3.5 w-3.5 ${pumpOn ? "motion-safe:animate-pulse" : ""}`} aria-hidden="true" />
+        Pump: {pumpOn ? "Running" : "Stopped"}
+      </span>
+      <ul className="flex flex-1 flex-wrap items-center gap-1.5" aria-label={`${open.length} of ${farmValves.length} valves open`}>
+        {farmValves.map((valve) => {
+          const label = `${valve.name} (${valve.zone}): ${valve.open ? `open · ${valve.flowRate} L/min` : "closed"}`;
+          return (
+            <li key={valve.id} title={label} aria-label={label} className={`relative flex h-9 w-9 items-center justify-center rounded-lg ${valve.open ? "bg-gradient-to-br from-[#6fe07f] to-[#00a218] text-white shadow-sm" : "bg-[var(--d-chip)] text-[var(--d-muted)]"}`}>
+              <Faucet className="h-4 w-4" aria-hidden="true" />
+              {valve.open && <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-[var(--d-card)] bg-[#6fe07f]" />}
+            </li>
+          );
+        })}
+      </ul>
+      <span className="text-xs text-[var(--d-muted)]">
+        {open.length} of {farmValves.length} open · {flow} L/min
+      </span>
+      <Link href="/dashboard/irrigation" className="inline-flex items-center gap-1 text-xs font-semibold text-[var(--d-accent)] hover:underline">
+        Irrigation <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
+      </Link>
+    </div>
   );
 }
