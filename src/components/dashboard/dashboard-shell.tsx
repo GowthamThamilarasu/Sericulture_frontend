@@ -54,18 +54,11 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   return (
     <DashboardThemeRoot>
       <div className="flex min-h-screen">
-<<<<<<< HEAD
-        <aside className="hidden w-64 shrink-0 border-r border-[var(--d-line)] bg-[var(--d-side)] p-5 text-[var(--d-soft)] lg:block">
-          <Link href="/" className="mb-8 flex flex-col items-start gap-2">
-            <Logo plate className="h-28" />
-            <div className="pl-1 text-[10px] uppercase tracking-[0.2em] text-[var(--d-muted)]">Control Center</div>
-=======
         <aside className="dash-side sticky top-0 hidden h-screen w-64 shrink-0 overflow-y-auto overscroll-contain border-r p-5 lg:block">
           <SidebarBackdrop />
           <Link href="/" className="mb-8 block" aria-label="Paari Seritech home">
             <Wordmark className="w-full" />
             <div className="mt-2.5 text-center text-[10px] uppercase tracking-[0.25em] text-[#6fe07f]/80">Control Center</div>
->>>>>>> e601771 (actual working code and required)
           </Link>
 
           <DashboardNav />
