@@ -1,5 +1,5 @@
 // Mobile number shown on the site, and the same number in the form a tel: link needs.
-export const contactPhone = "+91 96006 04599";
+export const contactPhone = "+91 96006 04590";
 export const contactPhoneHref = "tel:+919600604590";
 
 // WhatsApp number for the chat links: digits only, with country code and no "+".
