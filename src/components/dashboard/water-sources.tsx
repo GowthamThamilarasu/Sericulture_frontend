@@ -462,7 +462,7 @@ function SourceDetails({ source, onEdit }: { source: WaterSource; onEdit: () => 
   return (
     <section aria-label={`${source.name} details`} className="space-y-4">
       <div className="flex flex-wrap items-start gap-4">
-        <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#6fe07f] to-[#00a218] shadow-[0_10px_24px_-10px_rgb(0_162_24_/_0.8)]">
+        <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[var(--d-accent-bright)] to-[var(--d-accent-strong)] shadow-[0_10px_24px_-10px_color-mix(in_srgb,var(--d-accent-strong)_80%,transparent)]">
           <TypeIcon className="h-7 w-7 text-white" aria-hidden="true" />
         </span>
         <div className="min-w-0 flex-1">
@@ -514,7 +514,7 @@ function SourceDetails({ source, onEdit }: { source: WaterSource; onEdit: () => 
             </span>
           </div>
           <div className="relative mt-2.5 h-3 overflow-hidden rounded-full bg-[var(--d-track)]" role="meter" aria-valuemin={0} aria-valuemax={source.depthFt} aria-valuenow={column} aria-label="Water column in the well">
-            <div className="absolute inset-y-0 right-0 rounded-full bg-gradient-to-r from-[#6fe07f] to-[#00a218]" style={{ width: `${(column / source.depthFt) * 100}%` }} />
+            <div className="absolute inset-y-0 right-0 rounded-full bg-gradient-to-r from-[var(--d-accent-bright)] to-[var(--d-accent-strong)]" style={{ width: `${(column / source.depthFt) * 100}%` }} />
           </div>
           <div className="mt-1 flex justify-between text-[10px] text-[var(--d-muted)]">
             <span>Ground</span>
@@ -581,8 +581,8 @@ export function WaterSourceButton() {
         <>
           <Dialog.Overlay className="fixed inset-0 z-[60] bg-black/55 backdrop-blur-sm" />
           <Dialog.Content className="fixed left-1/2 top-1/2 z-[61] flex max-h-[calc(100vh-2rem)] w-[calc(100%-2rem)] max-w-4xl -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-3xl border border-[var(--d-line)] bg-[var(--d-popup)] text-[var(--d-text)] shadow-[0_30px_80px_-20px_rgb(0_0_0_/_0.5)]">
-            <header className="relative shrink-0 overflow-hidden bg-gradient-to-br from-[#0f5c2e] via-[#11692f] to-[#0a3f1f] px-6 pb-5 pt-6 text-white">
-              <span aria-hidden="true" className="pointer-events-none absolute -right-10 -top-16 h-48 w-48 rounded-full bg-[#6fe07f]/25 blur-3xl" />
+            <header className="relative shrink-0 overflow-hidden bg-gradient-to-br from-[var(--d-accent-deep)] via-[color-mix(in_srgb,var(--d-accent-deep)_80%,var(--d-accent-strong))] to-[color-mix(in_srgb,var(--d-accent-deep)_65%,black)] px-6 pb-5 pt-6 text-white">
+              <span aria-hidden="true" className="pointer-events-none absolute -right-10 -top-16 h-48 w-48 rounded-full bg-[color-mix(in_srgb,var(--d-accent-bright)_25%,transparent)] blur-3xl" />
               <span aria-hidden="true" className="pointer-events-none absolute -bottom-20 left-1/3 h-40 w-40 rounded-full bg-[#e3b23c]/20 blur-3xl" />
               <div className="relative flex items-start justify-between gap-4">
                 <div className="flex items-center gap-3">
@@ -624,7 +624,7 @@ export function WaterSourceButton() {
                       }}
                       className={`flex min-w-[12rem] items-center gap-3 rounded-2xl p-2.5 text-left transition-all md:min-w-0 ${current ? "bg-[var(--d-popup)] shadow-md ring-1 ring-[var(--d-card-border)]" : "hover:bg-[var(--d-chip)]"}`}
                     >
-                      <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${current ? "bg-gradient-to-br from-[#6fe07f] to-[#00a218] text-white" : "bg-[var(--d-accent-soft)] text-[var(--d-accent)]"}`}>
+                      <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${current ? "bg-gradient-to-br from-[var(--d-accent-bright)] to-[var(--d-accent-strong)] text-white" : "bg-[var(--d-accent-soft)] text-[var(--d-accent)]"}`}>
                         <TypeIcon className="h-[18px] w-[18px]" aria-hidden="true" />
                       </span>
                       <span className="min-w-0 flex-1">

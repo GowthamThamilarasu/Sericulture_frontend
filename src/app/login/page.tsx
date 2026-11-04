@@ -25,12 +25,12 @@ export default function LoginPage() {
         <div
           aria-hidden="true"
           className="absolute inset-0 bg-cover bg-center opacity-35"
-          style={{ backgroundImage: "url('/landing/rearing-shed.jpg')" }}
+          style={{ backgroundImage: "url('/landing/rearing-shed.png')" }}
         />
         <div aria-hidden="true" className="absolute inset-0 bg-[radial-gradient(90%_70%_at_0%_0%,rgba(63,191,95,0.35),transparent_60%),linear-gradient(180deg,rgba(11,16,13,0.55),#0b100d)]" />
 
         <Link href="/" className="relative flex items-center gap-3">
-          <Logo plate className="h-28" />
+          <Logo plate className="h-20" />
         </Link>
 
         <div className="relative">
@@ -59,7 +59,7 @@ export default function LoginPage() {
           </Link>
 
           <div className="mt-8 flex items-center gap-3 lg:hidden">
-            <Logo className="h-24" />
+            <Logo className="h-14" />
           </div>
 
           <h1 className="mt-8 font-display text-4xl font-bold tracking-[-0.015em] text-ink sm:text-[2.75rem]">Welcome <Accent>back</Accent></h1>

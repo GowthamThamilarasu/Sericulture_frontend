@@ -268,7 +268,7 @@ export function DeviceStore() {
                 <div className="relative aspect-[4/3] overflow-hidden bg-white">
                   {/* eslint-disable-next-line @next/next/no-img-element -- static export, no image optimizer */}
                   <img src={item.image} alt={item.name} loading="lazy" className="h-full w-full object-contain p-3 transition-transform duration-500 group-hover:scale-105" />
-                  <span className="absolute left-3 top-3 rounded-full bg-[#0f5c2e] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-white">{item.group}</span>
+                  <span className="absolute left-3 top-3 rounded-full bg-[var(--d-accent-deep)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-white">{item.group}</span>
                 </div>
                 <div className="flex flex-1 flex-col p-4">
                   <h3 className="text-sm font-bold text-[var(--d-text)]">{item.name}</h3>

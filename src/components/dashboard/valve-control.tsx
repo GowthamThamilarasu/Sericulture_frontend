@@ -5,12 +5,31 @@ import Link from "next/link";
 import * as Dialog from "@radix-ui/react-dialog";
 import { ChevronRight, CircleGauge, Faucet, Gauge, Infinity as InfinityIcon, Maximize2, Waves, X } from "lucide-react";
 
-import { ModeSelector, useControllerMode } from "@/components/dashboard/controller-mode";
+import { ModeSelector, useControllerModes } from "@/components/dashboard/controller-mode";
 import { Toggle, Widget } from "@/components/dashboard/dashboard-widgets";
+import { irrigationRule, setDevicePower, useActiveModel, useDevicePowers, useNow } from "@/components/dashboard/device-automation";
 import { Pill, Stepper, type Tone } from "@/components/dashboard/page-kit";
-import { TargetLine, useTargetedSwitch } from "@/components/dashboard/target-dialog";
-import { actuators, farmValves, pumpOutletPressure } from "@/data/mock";
+import { ControlNote, type DeviceControl, useDeviceControl } from "@/components/dashboard/target-dialog";
+import { type FarmPump, useFarmDevices } from "@/components/dashboard/farm-devices";
+import { pumpOutletPressure } from "@/data/mock";
 import type { FarmValve } from "@/types";
+
+/**
+ * Saved on/off for every pump and valve (added and removed on the Farm Monitor), and what each is actually doing:
+ * a device in Auto follows the active irrigation model, otherwise it holds its saved state.
+ */
+function useIrrigationPower() {
+  const { pumps, valves } = useFarmDevices();
+  const names = [...pumps, ...valves].map((item) => item.name);
+  const stored = useDevicePowers(names);
+  const modes = useControllerModes(names);
+  const model = useActiveModel("irrigation");
+  const now = useNow();
+  const running = names.map((_, index) => (modes[index] === "auto" ? irrigationRule(model.values, stored[index], now).on : stored[index]));
+  const storedOf = (name: string) => stored[names.indexOf(name)] ?? false;
+  const runningOf = (name: string) => running[names.indexOf(name)] ?? false;
+  return { pumps, valves, stored: storedOf, running: runningOf, anyPumpOn: pumps.some((pump) => runningOf(pump.name)) };
+}
 
 const litres = (value: number) => value.toLocaleString(undefined, { maximumFractionDigits: value < 100 ? 1 : 0 });
 
@@ -73,15 +92,34 @@ function valveStatus(valve: FarmValve) {
   return { done, progress, status };
 }
 
-function ValveTile({ valve, onChange }: { valve: FarmValve; onChange: (next: Partial<FarmValve>) => void }) {
-  const mode = useControllerMode(valve.name);
-  const { done, progress, status } = valveStatus(valve);
-
-  const setOpen = () => {
-    if (valve.open) return onChange({ open: false });
+// The valve's switch, by its mode. Lives outside the popup so the target window's overlay isn't trapped inside it.
+function useValveControl(valve: FarmValve, stored: boolean, onChange: (next: Partial<FarmValve>) => void) {
+  const { done } = valveStatus(valve);
+  const setOpen = (open: boolean) => {
     // Reopening after a finished run starts a fresh delivery.
-    onChange({ open: true, delivered: done ? 0 : valve.delivered });
+    if (open && done) onChange({ delivered: 0 });
+    setDevicePower(valve.name, open);
   };
+  // A volume target in Semi-auto becomes the valve's delivery volume.
+  return useDeviceControl(valve.name, stored, setOpen, (target) => {
+    if (target.option.key === "volume") onChange({ volume: target.value, infinite: false, delivered: 0 });
+  });
+}
+
+function ValvePopup({ valve, stored, onChange, onClose }: { valve: FarmValve; stored: boolean; onChange: (next: Partial<FarmValve>) => void; onClose: () => void }) {
+  const control = useValveControl(valve, stored, onChange);
+  return (
+    <>
+      <ControlPopup open onClose={onClose} title={`${valve.name} controls`}>
+        <ValveTile valve={valve} control={control} onChange={onChange} />
+      </ControlPopup>
+      {control.dialog}
+    </>
+  );
+}
+
+function ValveTile({ valve, control, onChange }: { valve: FarmValve; control: DeviceControl; onChange: (next: Partial<FarmValve>) => void }) {
+  const { progress, status } = valveStatus(valve);
 
   return (
     <div className={`${tile} ${valve.open ? "ring-2 ring-[var(--d-tint,var(--d-accent))]" : ""}`}>
@@ -129,9 +167,12 @@ function ValveTile({ valve, onChange }: { valve: FarmValve; onChange: (next: Par
         </button>
       </div>
 
-      <div className="mt-auto flex items-center justify-between gap-2 border-t border-[var(--d-line)] pt-3">
-        <ModeSelector name={valve.name} />
-        <Toggle size="sm" on={valve.open} onChange={setOpen} label={`${valve.name} open`} disabled={mode === "auto"} />
+      <div className="mt-auto border-t border-[var(--d-line)] pt-3">
+        <div className="flex items-center justify-between gap-2">
+          <ModeSelector name={valve.name} />
+          <Toggle size="sm" on={control.on} onChange={control.onToggle} label={`${valve.name} open`} disabled={control.locked} />
+        </div>
+        <ControlNote control={control} className="mt-2 text-center" />
       </div>
     </div>
   );
@@ -149,9 +190,10 @@ function SubHeading({ icon: Icon, title, detail }: { icon: typeof Waves; title: 
   );
 }
 
-// The pump feeds every valve, so it gets its own wide panel above the valve grid.
-function PumpPanel({ on, flow, pressure, openValves, totalValves, mode, onToggle, target, editTarget, dialog }: { on: boolean; flow: number; pressure: number; openValves: number; totalValves: number; mode: string; onToggle: () => void } & Pick<ReturnType<typeof useTargetedSwitch>, "target" | "editTarget" | "dialog">) {
+// A pump's full controls, shown in its popup.
+function PumpPanel({ pump, control, flow, pressure, openValves, totalValves }: { pump: FarmPump; control: DeviceControl; flow: number; pressure: number; openValves: number; totalValves: number }) {
   const stat = "rounded-lg bg-[var(--d-chip)] px-4 py-2.5";
+  const on = control.on;
   return (
     <div className={`flex flex-wrap items-center gap-4 rounded-xl border border-[var(--d-card-border)] bg-[var(--d-inset)] p-4 transition-shadow hover:shadow-md ${on ? "ring-2 ring-[var(--d-tint,var(--d-accent))]" : ""}`}>
       <div className="flex min-w-[11rem] flex-1 items-center gap-3">
@@ -159,12 +201,12 @@ function PumpPanel({ on, flow, pressure, openValves, totalValves, mode, onToggle
           <Waves className={`h-7 w-7 ${on ? "motion-safe:animate-pulse" : ""}`} style={{ color: on ? "var(--d-tint, var(--d-accent))" : "var(--d-muted)" }} aria-hidden="true" />
         </span>
         <div className="min-w-0">
-          <div className="text-base font-bold text-[var(--d-text)]">Water Pump</div>
-          <div className="text-[11px] text-[var(--d-muted)]">Main line</div>
+          <div className="text-base font-bold text-[var(--d-text)]">{pump.name}</div>
+          <div className="text-[11px] text-[var(--d-muted)]">{pump.location}</div>
           <div className="mt-1">
             <Pill tone={on ? "accent" : "muted"}>{on ? "Running" : "Stopped"}</Pill>
           </div>
-          {target && <TargetLine target={target} onEdit={editTarget} />}
+          <ControlNote control={control} className="mt-1 max-w-[16rem]" />
         </div>
       </div>
 
@@ -180,9 +222,8 @@ function PumpPanel({ on, flow, pressure, openValves, totalValves, mode, onToggle
       </div>
 
       <div className="flex items-center gap-4 border-l border-[var(--d-line)] pl-4">
-        <ModeSelector name="Water Pump" />
-        <Toggle on={on} onChange={onToggle} label="Water Pump power" disabled={mode === "auto"} />
-        {dialog}
+        <ModeSelector name={pump.name} />
+        <Toggle on={on} onChange={control.onToggle} label={`${pump.name} power`} disabled={control.locked} />
       </div>
     </div>
   );
@@ -236,28 +277,45 @@ function CompactValve({ valve, onOpen }: { valve: FarmValve; onOpen: () => void 
   );
 }
 
-function CompactPump({ on, flow, pressure, openValves, totalValves, onOpen }: { on: boolean; flow: number; pressure: number; openValves: number; totalValves: number; onOpen: () => void }) {
+function CompactPump({ pump, on, flow, pressure, openValves, totalValves, onOpen }: { pump: FarmPump; on: boolean; flow: number; pressure: number; openValves: number; totalValves: number; onOpen: () => void }) {
   return (
-    <button type="button" onClick={onOpen} aria-label={`Water Pump: ${on ? "running" : "stopped"}. Open controls`} className={`${compact} flex-1 ${on ? "ring-2 ring-[var(--d-tint,var(--d-accent))]" : ""}`}>
+    <button type="button" onClick={onOpen} aria-label={`${pump.name}: ${on ? "running" : "stopped"}. Open controls`} className={`${compact} ${on ? "ring-2 ring-[var(--d-tint,var(--d-accent))]" : ""}`}>
       <span className="flex w-full items-center gap-3">
         <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${on ? "bg-[var(--d-tint-soft,var(--d-accent-soft))]" : "bg-[var(--d-chip)]"}`}>
           <Waves className={`h-5 w-5 ${on ? "motion-safe:animate-pulse" : ""}`} style={{ color: on ? "var(--d-tint, var(--d-accent))" : "var(--d-muted)" }} aria-hidden="true" />
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block text-sm font-bold text-[var(--d-text)]">Water Pump</span>
-          <span className="block text-[11px] text-[var(--d-muted)]">Main line</span>
+          <span className="block truncate text-sm font-bold text-[var(--d-text)]">{pump.name}</span>
+          <span className="block truncate text-[11px] text-[var(--d-muted)]">{pump.location}</span>
         </span>
         <ChevronRight className="h-4 w-4 shrink-0 text-[var(--d-muted)] transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
       </span>
       <span className="mt-3">
         <Pill tone={on ? "accent" : "muted"}>{on ? "Running" : "Stopped"}</Pill>
       </span>
-      <span className="mt-auto grid w-full grid-cols-3 gap-3 border-t border-[var(--d-line)] pt-3">
+      <span className="mt-3 grid w-full grid-cols-3 gap-3 border-t border-[var(--d-line)] pt-3">
         <CompactReading label="Flow" value={litres(flow)} unit="L/min" />
         <CompactReading label="Pressure" value={pressure.toFixed(1)} unit="bar" />
         <CompactReading label="Valves" value={String(openValves)} unit={`of ${totalValves}`} />
       </span>
     </button>
+  );
+}
+
+// One pump: its card, its controls popup and its target window (kept outside the popup so the overlay isn't trapped).
+function PumpUnit({ pump, stored, flow, openValves, totalValves }: { pump: FarmPump; stored: boolean; flow: number; openValves: number; totalValves: number }) {
+  const control = useDeviceControl(pump.name, stored, (on) => setDevicePower(pump.name, on));
+  const [open, setOpen] = useState(false);
+  const pressure = control.on ? pumpOutletPressure : 0;
+  const pumpFlow = control.on ? flow : 0;
+  return (
+    <>
+      <CompactPump pump={pump} on={control.on} flow={pumpFlow} pressure={pressure} openValves={openValves} totalValves={totalValves} onOpen={() => setOpen(true)} />
+      <ControlPopup open={open} onClose={() => setOpen(false)} title={`${pump.name} controls`} wide>
+        <PumpPanel pump={pump} control={control} flow={pumpFlow} pressure={pressure} openValves={openValves} totalValves={totalValves} />
+      </ControlPopup>
+      {control.dialog}
+    </>
   );
 }
 
@@ -286,60 +344,85 @@ function ControlPopup({ open, onClose, title, wide, children }: { open: boolean;
   );
 }
 
+type ValveRuntime = Partial<Pick<FarmValve, "delivered" | "volume" | "infinite">>;
+
 // `embedded` drops the card so the tiles can sit inside another block (e.g. a tab).
 export function ValveControl({ className, embedded }: { className?: string; embedded?: boolean }) {
-  const [valves, setValves] = useState(farmValves);
-  const [pumpOn, setPumpOn] = useState(() => actuators.find((item) => item.name === "Water Pump")?.status === "ON");
-  const pumpMode = useControllerMode("Water Pump");
-  const pump = useTargetedSwitch("Water Pump", pumpOn, () => setPumpOn((value) => !value));
+  const power = useIrrigationPower();
+  // Litres delivered and volume changes are kept here; open/closed comes from the shared device state (and the model in Auto).
+  const [runtime, setRuntime] = useState<Record<string, ValveRuntime>>({});
+  const valves: FarmValve[] = power.valves.map((setup) => ({
+    ...setup,
+    delivered: runtime[setup.id]?.delivered ?? setup.delivered ?? 0,
+    volume: runtime[setup.id]?.volume ?? setup.volume,
+    infinite: runtime[setup.id]?.infinite ?? setup.infinite,
+    open: power.running(setup.name),
+  }));
   const openValves = valves.filter((valve) => valve.open).length;
   const flow = valves.reduce((sum, valve) => sum + (valve.open ? valve.flowRate : 0), 0);
+  const openList = valves.filter((valve) => valve.open);
+  const openKey = openList.map((valve) => `${valve.id}:${valve.flowRate}:${valve.volume}:${valve.infinite}`).join(",");
 
-  // Live delivery: open valves add their flow every second and close themselves when the volume is reached.
+  // Live delivery: open valves add their flow every second.
   useEffect(() => {
-    if (!openValves) return;
+    if (!openKey) return;
+    const open = openKey.split(",").map((part) => {
+      const [id, rate, volume, infinite] = part.split(":");
+      return { id, rate: Number(rate), volume: Number(volume), infinite: infinite === "true" };
+    });
     const timer = window.setInterval(() => {
-      setValves((current) =>
-        current.map((valve) => {
-          if (!valve.open) return valve;
-          const delivered = valve.delivered + valve.flowRate / 60;
-          return !valve.infinite && delivered >= valve.volume ? { ...valve, delivered: valve.volume, open: false } : { ...valve, delivered };
-        }),
-      );
+      setRuntime((current) => {
+        const next = { ...current };
+        for (const item of open) {
+          const base = next[item.id]?.delivered ?? power.valves.find((valve) => valve.id === item.id)?.delivered ?? 0;
+          const delivered = base + item.rate / 60;
+          next[item.id] = { ...next[item.id], delivered: item.infinite ? delivered : Math.min(item.volume, delivered) };
+        }
+        return next;
+      });
     }, 1000);
     return () => window.clearInterval(timer);
-  }, [openValves]);
+    // power.valves only supplies the starting litres for a valve's first tick.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openKey]);
+
+  // A valve closes itself once its volume is delivered.
+  useEffect(() => {
+    valves.forEach((valve) => {
+      if (valve.open && power.stored(valve.name) && !valve.infinite && valve.delivered >= valve.volume) setDevicePower(valve.name, false);
+    });
+  });
 
   const [expanded, setExpanded] = useState<string | null>(null);
   const expandedValve = valves.find((valve) => valve.id === expanded);
-  const pumpPressure = pumpOn ? pumpOutletPressure : 0;
-
-  const update = (id: string, next: Partial<FarmValve>) => setValves((current) => current.map((valve) => (valve.id === id ? { ...valve, ...next } : valve)));
+  const update = (id: string, next: Partial<FarmValve>) => setRuntime((current) => ({ ...current, [id]: { ...current[id], ...next } }));
+  const empty = (text: string) => <p className="rounded-xl border border-dashed border-[var(--d-card-border)] p-4 text-center text-xs text-[var(--d-muted)]">{text}</p>;
 
   const body = (
     <div className="grid gap-6 md:grid-cols-[minmax(13rem,16rem)_1fr]">
-      <section aria-label="Water pump" className="flex flex-col">
-        <SubHeading icon={Waves} title="Main Supply" detail="Feeds every valve · tap for controls" />
-        <CompactPump on={pumpOn} flow={flow} pressure={pumpPressure} openValves={openValves} totalValves={valves.length} onOpen={() => setExpanded("pump")} />
+      <section aria-label="Pumps" className="flex flex-col">
+        <SubHeading icon={Waves} title="Main Supply" detail={`${power.pumps.length} pump${power.pumps.length === 1 ? "" : "s"} · tap for controls`} />
+        <div className="grid gap-3">
+          {power.pumps.length === 0
+            ? empty("No pumps. Add one under Add / remove.")
+            : power.pumps.map((pump) => <PumpUnit key={pump.id} pump={pump} stored={power.stored(pump.name)} flow={flow} openValves={openValves} totalValves={valves.length} />)}
+        </div>
       </section>
 
       <section aria-label="Field valves">
         <SubHeading icon={Faucet} title="Field Valves" detail={`${openValves} of ${valves.length} open · ${flow} L/min · tap a valve for controls`} />
-        <div className="grid gap-3 [grid-template-columns:repeat(auto-fill,minmax(10.5rem,1fr))]">
-          {valves.map((valve) => (
-            <CompactValve key={valve.id} valve={valve} onOpen={() => setExpanded(valve.id)} />
-          ))}
-        </div>
+        {valves.length === 0 ? (
+          empty("No valves. Add one under Add / remove.")
+        ) : (
+          <div className="grid gap-3 [grid-template-columns:repeat(auto-fill,minmax(10.5rem,1fr))]">
+            {valves.map((valve) => (
+              <CompactValve key={valve.id} valve={valve} onOpen={() => setExpanded(valve.id)} />
+            ))}
+          </div>
+        )}
       </section>
 
-      <ControlPopup open={expanded === "pump"} onClose={() => setExpanded(null)} title="Water Pump controls" wide>
-        <PumpPanel on={pumpOn} flow={flow} pressure={pumpPressure} openValves={openValves} totalValves={valves.length} mode={pumpMode} onToggle={pump.onToggle} target={pump.target} editTarget={pump.editTarget} dialog={null} />
-      </ControlPopup>
-      <ControlPopup open={!!expandedValve} onClose={() => setExpanded(null)} title={expandedValve ? `${expandedValve.name} controls` : "Valve controls"}>
-        {expandedValve && <ValveTile valve={expandedValve} onChange={(next) => update(expandedValve.id, next)} />}
-      </ControlPopup>
-      {/* The pump's target window sits outside the popup so its fixed overlay isn't trapped by the popup's transform. */}
-      {pump.dialog}
+      {expandedValve && <ValvePopup key={expandedValve.id} valve={expandedValve} stored={power.stored(expandedValve.name)} onChange={(next) => update(expandedValve.id, next)} onClose={() => setExpanded(null)} />}
     </div>
   );
 
@@ -362,29 +445,32 @@ export function ValveControl({ className, embedded }: { className?: string; embe
 
 /** One-line pump and valve status for the Overview, like the climate strip on the shed side. Controls are on the Irrigation tab. */
 export function ValveStatusStrip({ className }: { className?: string }) {
-  const pumpOn = actuators.find((item) => item.name === "Water Pump")?.status === "ON";
-  const open = farmValves.filter((valve) => valve.open);
+  const power = useIrrigationPower();
+  const open = power.valves.filter((valve) => power.running(valve.name));
   const flow = open.reduce((sum, valve) => sum + valve.flowRate, 0);
+  const runningPumps = power.pumps.filter((pump) => power.running(pump.name)).length;
+  const pumpLabel = power.pumps.length > 1 ? `Pumps: ${runningPumps} of ${power.pumps.length} running` : `Pump: ${power.anyPumpOn ? "Running" : "Stopped"}`;
 
   return (
     <div className={`dash-card flex flex-wrap items-center gap-3 rounded-xl border border-[var(--d-card-border)] bg-[var(--d-card)] p-3 ${className ?? ""}`}>
       <span className="inline-flex items-center gap-2 rounded-full bg-[var(--d-accent-soft)] px-3 py-1.5 text-xs font-semibold text-[var(--d-accent)]">
-        <Waves className={`h-3.5 w-3.5 ${pumpOn ? "motion-safe:animate-pulse" : ""}`} aria-hidden="true" />
-        Pump: {pumpOn ? "Running" : "Stopped"}
+        <Waves className={`h-3.5 w-3.5 ${power.anyPumpOn ? "motion-safe:animate-pulse" : ""}`} aria-hidden="true" />
+        {pumpLabel}
       </span>
-      <ul className="flex flex-1 flex-wrap items-center gap-1.5" aria-label={`${open.length} of ${farmValves.length} valves open`}>
-        {farmValves.map((valve) => {
-          const label = `${valve.name} (${valve.zone}): ${valve.open ? `open · ${valve.flowRate} L/min` : "closed"}`;
+      <ul className="order-last flex basis-full flex-wrap items-center gap-1.5" aria-label={`${open.length} of ${power.valves.length} valves open`}>
+        {power.valves.map((valve) => {
+          const valveOpen = power.running(valve.name);
+          const label = `${valve.name} (${valve.zone}): ${valveOpen ? `open · ${valve.flowRate} L/min` : "closed"}`;
           return (
-            <li key={valve.id} title={label} aria-label={label} className={`relative flex h-9 w-9 items-center justify-center rounded-lg ${valve.open ? "bg-gradient-to-br from-[#6fe07f] to-[#00a218] text-white shadow-sm" : "bg-[var(--d-chip)] text-[var(--d-muted)]"}`}>
+            <li key={valve.id} title={label} aria-label={label} className={`relative flex h-9 w-9 items-center justify-center rounded-lg ${valveOpen ? "bg-gradient-to-br from-[var(--d-accent-bright)] to-[var(--d-accent-strong)] text-white shadow-sm" : "bg-[var(--d-chip)] text-[var(--d-muted)]"}`}>
               <Faucet className="h-4 w-4" aria-hidden="true" />
-              {valve.open && <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-[var(--d-card)] bg-[#6fe07f]" />}
+              {valveOpen && <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-[var(--d-card)] bg-[var(--d-accent-bright)]" />}
             </li>
           );
         })}
       </ul>
       <span className="text-xs text-[var(--d-muted)]">
-        {open.length} of {farmValves.length} open · {flow} L/min
+        {open.length} of {power.valves.length} open · {flow} L/min
       </span>
       <Link href="/dashboard/irrigation" className="inline-flex items-center gap-1 text-xs font-semibold text-[var(--d-accent)] hover:underline">
         Irrigation <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />

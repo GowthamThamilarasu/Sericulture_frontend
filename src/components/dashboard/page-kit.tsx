@@ -4,7 +4,6 @@ import * as Tabs from "@radix-ui/react-tabs";
 import { ChartLine, Minus, Plus } from "lucide-react";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
-import { ModeSelector } from "@/components/dashboard/controller-mode";
 import { useDashboardTheme } from "@/components/dashboard/dashboard-theme";
 import { type Icon, Widget } from "@/components/dashboard/dashboard-widgets";
 import { HistoryProvider } from "@/components/dashboard/history-dialog";
@@ -72,7 +71,7 @@ export function PageHeader({ icon: Icon, eyebrow, title, detail, badge = "Demo /
 
 export function Pill({ tone = "accent", children }: { tone?: Tone; children: React.ReactNode }) {
   return (
-    <span className="inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.15em]" style={{ backgroundColor: toneSoft[tone], color: toneColor[tone] }}>
+    <span className="inline-flex shrink-0 items-center whitespace-nowrap rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.15em]" style={{ backgroundColor: toneSoft[tone], color: toneColor[tone] }}>
       {children}
     </span>
   );
@@ -121,7 +120,7 @@ export function TrendChart({ id, title, unit, data, tone, icon, className }: Tre
     <Widget title={`${title} History`} icon={icon} className={className} action={<ChartLine className="h-4 w-4 shrink-0 text-[var(--d-muted)]" aria-hidden="true" />}>
       <div className="h-56">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: -12 }}>
+          <AreaChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
             <defs>
               <linearGradient id={id} x1="0" x2="0" y1="0" y2="1">
                 <stop offset="0%" stopColor={color} stopOpacity={0.35} />
@@ -130,7 +129,7 @@ export function TrendChart({ id, title, unit, data, tone, icon, className }: Tre
             </defs>
             <CartesianGrid stroke={palette.grid} vertical={false} />
             <XAxis dataKey="time" tickLine={false} axisLine={false} tick={{ fill: palette.tick, fontSize: 11 }} />
-            <YAxis tickLine={false} axisLine={false} width={44} domain={["auto", "auto"]} tick={{ fill: palette.tick, fontSize: 11 }} />
+            <YAxis tickLine={false} axisLine={false} width={40} domain={["auto", "auto"]} tickFormatter={(value: number) => String(Math.round(value * 10) / 10)} tick={{ fill: palette.tick, fontSize: 11 }} />
             <Tooltip
               formatter={(value) => [`${value} ${unit}`, title]}
               contentStyle={{ backgroundColor: palette.tooltipBg, border: `1px solid ${palette.tooltipBorder}`, borderRadius: 8, color: palette.text }}
@@ -141,28 +140,6 @@ export function TrendChart({ id, title, unit, data, tone, icon, className }: Tre
         </ResponsiveContainer>
       </div>
     </Widget>
-  );
-}
-
-// A controllable device: icon, name, status line and its Auto / Semi / Manual selector.
-export function ControlRow({ name, icon: Icon, status, tone = "muted" }: { name: string; icon: Icon; status?: string; tone?: Tone }) {
-  return (
-    <div className={`flex items-center justify-between gap-3 rounded-md border border-[var(--d-card-border)] bg-[var(--d-card)] p-3 ${tintClass(Icon)}`}>
-      <div className="flex min-w-0 items-center gap-3">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--d-tint-soft,var(--d-accent-soft))]">
-          <Icon className="h-4 w-4" style={{ color: "var(--d-tint, var(--d-accent))" }} aria-hidden="true" />
-        </span>
-        <div className="min-w-0">
-          <div className="truncate text-sm font-semibold text-[var(--d-text)]">{name}</div>
-          {status && (
-            <div className="truncate text-[10px] uppercase tracking-[0.15em]" style={{ color: toneColor[tone] }}>
-              {status}
-            </div>
-          )}
-        </div>
-      </div>
-      <ModeSelector name={name} className="shrink-0" />
-    </div>
   );
 }
 
@@ -244,13 +221,13 @@ export function ViewTabs<T extends string>({ label, idPrefix, views, value, onCh
           aria-selected={value === item.id}
           aria-controls={`${idPrefix}-view-${item.id}`}
           onClick={() => onChange(item.id)}
-          className={`flex flex-1 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors ${
+          className={`flex flex-1 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 py-2 text-xs font-semibold transition-colors sm:gap-2 sm:px-4 sm:py-2.5 sm:text-sm ${
             value === item.id ? "accent-fill shadow-sm" : "text-[var(--d-soft)] hover:bg-[var(--d-chip-hover)] hover:text-[var(--d-text)]"
           }`}
         >
           <item.icon className="h-4 w-4" aria-hidden="true" />
           {item.label}
-          {item.count ? <span className={`rounded-full px-2 py-0.5 text-[11px] ${value === item.id ? "bg-black/15" : "bg-[var(--d-chip)]"}`}>{item.count}</span> : null}
+          {item.count ? <span className={`hidden rounded-full px-2 py-0.5 text-[11px] sm:inline ${value === item.id ? "bg-black/15" : "bg-[var(--d-chip)]"}`}>{item.count}</span> : null}
         </button>
       ))}
     </div>

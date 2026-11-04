@@ -42,6 +42,7 @@ import {
 
 import { BatchSettings } from "@/components/dashboard/batch-settings";
 import { DeviceStore, ServiceCenter, TeamUsers } from "@/components/dashboard/settings-extras";
+import { ShedDeviceManager, ShedLimitsEditor } from "@/components/dashboard/shed-setup";
 import { DashboardPage, PageHeader, activeHighlight } from "@/components/dashboard/page-kit";
 
 // Matches the palette of the main dashboard page.
@@ -61,19 +62,12 @@ type FarmSettings = {
   cropCalendarStart: string;
 };
 
+// The shed's climate limits and equipment are saved on their own (shed-setup.tsx), not with these fields.
 type ShedSettings = {
   name: string;
   size: string;
   rearingCapacity: string;
   currentInstar: string;
-  tempMin: string;
-  tempMax: string;
-  humidityMin: string;
-  humidityMax: string;
-  co2Max: string;
-  nh3Max: string;
-  ventilationMode: string;
-  lightHours: string;
 };
 
 type AlertSettings = {
@@ -113,14 +107,6 @@ const defaultShed: ShedSettings = {
   size: "50 × 20 ft",
   rearingCapacity: "300",
   currentInstar: "IV",
-  tempMin: "24",
-  tempMax: "28",
-  humidityMin: "70",
-  humidityMax: "85",
-  co2Max: "1000",
-  nh3Max: "10",
-  ventilationMode: "Automatic",
-  lightHours: "16",
 };
 
 const defaultAlerts: AlertSettings = { app: true, sms: true, whatsapp: true, email: false, quietHours: false, autoAutomation: true };
@@ -241,26 +227,6 @@ function Panel({ icon: Icon, title, description, children }: { icon: typeof Cpu;
   );
 }
 
-function RangeCard({ icon: Icon, label, unit, min, max, onMin, onMax }: { icon: typeof Cpu; label: string; unit: string; min: string; max: string; onMin: (value: string) => void; onMax: (value: string) => void }) {
-  return (
-    <div className="rounded-xl border border-[var(--d-line)] bg-[var(--d-inset)] p-4">
-      <div className="flex items-center justify-between">
-        <span className="flex items-center gap-2 text-sm font-medium text-[var(--d-soft)]">
-          <Icon className="h-4 w-4 text-[var(--d-accent)]" /> {label}
-        </span>
-        <span className="text-sm font-semibold text-[var(--d-text)]">
-          {min}–{max}
-          <span className="ml-1 text-xs font-normal text-[var(--d-muted)]">{unit}</span>
-        </span>
-      </div>
-      <div className="mt-3 grid grid-cols-2 gap-2">
-        <TextInput type="number" value={min} onChange={onMin} suffix="Min" />
-        <TextInput type="number" value={max} onChange={onMax} suffix="Max" />
-      </div>
-    </div>
-  );
-}
-
 function loadSaved(): Saved | null {
   try {
     const raw = localStorage.getItem(storageKey);
@@ -288,6 +254,12 @@ const tabs = [
   { value: "users", label: "Users", detail: "Team & access", icon: UsersRound },
   { value: "alerts", label: "Alerts & System", detail: "Notifications", icon: Bell },
 ];
+
+// A tab can be opened by link, e.g. /dashboard/settings/?tab=shed from Climate Control.
+function initialTab() {
+  const tab = new URLSearchParams(window.location.search).get("tab");
+  return tabs.some((item) => item.value === tab) ? (tab as string) : "farm";
+}
 
 // Saved settings live in localStorage, so the form renders on the client only.
 export default dynamic(() => Promise.resolve(SettingsView), { ssr: false });
@@ -347,7 +319,7 @@ function SettingsView() {
     <DashboardPage tint="slate">
       <PageHeader icon={SettingsIcon} eyebrow="Settings" title="Farm, shed & device configuration" detail="Set up your farm once. Alerts, automation and reports use these values." badge={null} />
 
-      <Tabs.Root defaultValue="farm" orientation="vertical" className="grid gap-6 lg:grid-cols-[240px_1fr]">
+      <Tabs.Root defaultValue={initialTab()} orientation="vertical" className="grid gap-6 lg:grid-cols-[240px_1fr]">
         <Tabs.List className="flex gap-2 overflow-x-auto pb-1 lg:sticky lg:top-6 lg:flex-col lg:self-start lg:overflow-visible lg:pb-0">
           {tabs.map((tab) => (
             <Tabs.Trigger
@@ -397,21 +369,12 @@ function SettingsView() {
               <p className="mt-5 text-xs text-[var(--d-muted)]">The batch being reared, its breed and instar are set under Silkworm Batch.</p>
             </Panel>
 
-            <Panel icon={Thermometer} title="Climate targets" description="Alerts and automation act when readings leave these ranges.">
-              <div className="grid gap-4 md:grid-cols-2">
-                <RangeCard icon={Thermometer} label="Temperature" unit="°C" min={shed.tempMin} max={shed.tempMax} onMin={shedField("tempMin")} onMax={shedField("tempMax")} />
-                <RangeCard icon={Droplets} label="Humidity" unit="% RH" min={shed.humidityMin} max={shed.humidityMax} onMin={shedField("humidityMin")} onMax={shedField("humidityMax")} />
-              </div>
-              <div className="mt-5 grid gap-5 md:grid-cols-3">
-                <Field label="CO₂ limit"><TextInput type="number" value={shed.co2Max} onChange={shedField("co2Max")} suffix="ppm" /></Field>
-                <Field label="NH₃ limit"><TextInput type="number" value={shed.nh3Max} onChange={shedField("nh3Max")} suffix="ppm" /></Field>
-                <Field label="Light period"><TextInput type="number" value={shed.lightHours} onChange={shedField("lightHours")} suffix="hrs/day" /></Field>
-              </div>
-              <div className="mt-5">
-                <Field label="Ventilation mode">
-                  <Segmented value={shed.ventilationMode} onChange={shedField("ventilationMode")} options={["Automatic", "Scheduled", "Manual"]} />
-                </Field>
-              </div>
+            <Panel icon={Thermometer} title="Shed limits" description="A min and max for each reading. Auto keeps the active shed model inside these, and alerts use them. Saved straight away.">
+              <ShedLimitsEditor />
+            </Panel>
+
+            <Panel icon={Fan} title="Shed equipment" description="The fans, foggers, heaters and other devices in this shed. Climate Control, Automation and the Shed Monitor all use this list. Saved straight away.">
+              <ShedDeviceManager />
             </Panel>
           </Tabs.Content>
 
@@ -464,7 +427,7 @@ function SettingsView() {
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2">
                             <span className="truncate font-medium text-[var(--d-text)]">{device.name}</span>
-                            <span className={`h-2 w-2 shrink-0 rounded-full ${device.online ? "bg-[var(--d-accent)] shadow-[0_0_8px_#3fbf5f]" : "bg-[var(--d-warn)]"}`} />
+                            <span className={`h-2 w-2 shrink-0 rounded-full ${device.online ? "bg-[var(--d-accent)] shadow-[0_0_8px_var(--d-accent)]" : "bg-[var(--d-warn)]"}`} />
                           </div>
                           <div className="mt-0.5 truncate text-[13px] text-[var(--d-muted)]">{device.type} · {device.location}</div>
                           <div className="mt-2.5 flex flex-wrap items-center gap-1.5">

@@ -8,9 +8,9 @@ import { actuators } from "@/data/mock";
 export type ControllerMode = "auto" | "semi" | "manual";
 
 export const controllerModes: { value: ControllerMode; label: string; detail: string; icon: typeof Bot }[] = [
-  { value: "auto", label: "Auto", detail: "Runs on its own from the set points", icon: Bot },
-  { value: "semi", label: "Semi-auto", detail: "Suggests actions, you approve them", icon: UserCog },
-  { value: "manual", label: "Manual", detail: "You switch it on and off", icon: Hand },
+  { value: "auto", label: "Auto", detail: "Runs on its own from the active automation model", icon: Bot },
+  { value: "semi", label: "Semi-auto", detail: "Asks you for a target value when switched on", icon: UserCog },
+  { value: "manual", label: "Manual", detail: "Plain on/off, no target asked", icon: Hand },
 ];
 
 // Equipment that starts in manual when the demo data doesn't say otherwise.

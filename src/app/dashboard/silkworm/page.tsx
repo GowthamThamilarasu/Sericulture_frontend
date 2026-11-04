@@ -9,7 +9,8 @@ import { dueMedications, useSilkwormHealth } from "@/components/dashboard/silkwo
 import { MedicationPanel, SilkwormPhotoCheck } from "@/components/dashboard/silkworm-medication";
 import { batchProgress, formatDate, stages, totalDays, useBatches, useToday } from "@/components/dashboard/batch-store";
 import { type Icon, Widget } from "@/components/dashboard/dashboard-widgets";
-import { SectionHeader, shedSetpoints } from "@/components/dashboard/monitor-widgets";
+import { shedLimitSpecs } from "@/components/dashboard/climate-store";
+import { SectionHeader } from "@/components/dashboard/monitor-widgets";
 import { DashboardPage, PageHeader, Pill, StatTile, type Tone, ViewTabs, buttonSecondary } from "@/components/dashboard/page-kit";
 import { Co2Icon, HumidityIcon, Nh3Icon, TemperatureIcon } from "@/components/dashboard/sensor-icons";
 import { instarStages, silkwormBatch } from "@/data/mock";
@@ -345,7 +346,7 @@ function BatchHistory({ batches, activeId, onSelect, today }: { batches: BatchRe
 
 type Level = "OK" | "Watch" | "Act";
 const levelTone: Record<Level, Tone> = { OK: "accent", Watch: "warn", Act: "danger" };
-const limit = (key: string) => shedSetpoints.find((item) => item.key === key)?.value ?? 0;
+const limit = (key: string) => shedLimitSpecs.find((item) => item.key === key)?.value.max ?? 0;
 const range = (text: string) => {
   const match = text.match(/([\d.]+)\s*[–-]\s*([\d.]+)/);
   return match ? ([Number(match[1]), Number(match[2])] as const) : null;

@@ -240,16 +240,16 @@ export const pumpProtection = { runHoursToday: 2.6, runHoursTotal: 1842, starts:
 
 // Devices the seller (Paari Seritech) offers, shown in Settings → Device Store. Images are the website's product photos.
 export const sellerCatalog: { name: string; group: "Shed" | "Field"; image: string; summary: string; price: string }[] = [
-  { name: "Shed Controller", group: "Shed", image: "/products/shed-controller.jpg", summary: "Runs fans, humidifier, heater and lights from one panel, with Auto, Semi and Manual modes.", price: "On request" },
-  { name: "Environmental Sensor", group: "Shed", image: "/products/environmental-sensor.jpg", summary: "Temperature, humidity, NH₃, CO₂ and light in the rearing shed.", price: "On request" },
-  { name: "Soil Moisture Sensor", group: "Field", image: "/products/soil-moisture.jpg", summary: "Soil moisture in the root zone, to drive irrigation.", price: "On request" },
-  { name: "Soil Temperature Sensor", group: "Field", image: "/products/soil-temperature.jpg", summary: "Root-zone soil temperature.", price: "On request" },
-  { name: "Soil EC Sensor", group: "Field", image: "/products/soil-ec.jpg", summary: "Soil salinity and nutrient level as electrical conductivity.", price: "On request" },
-  { name: "Soil pH Sensor", group: "Field", image: "/products/soil-ph.jpg", summary: "Soil acidity for fertiliser planning.", price: "On request" },
-  { name: "Water EC Sensor", group: "Field", image: "/products/water-ec.jpg", summary: "Irrigation and fertigation water quality.", price: "On request" },
-  { name: "Flow Sensor", group: "Field", image: "/products/flow.jpg", summary: "Water flow in the irrigation line, per valve or at the pump.", price: "On request" },
-  { name: "Pressure Sensor", group: "Field", image: "/products/pressure.jpg", summary: "Line pressure to confirm pumps and valves are delivering.", price: "On request" },
-  { name: "Tank Level Sensor", group: "Field", image: "/products/tank-level.jpg", summary: "Water or nutrient level in storage tanks.", price: "On request" },
-  { name: "Rain Sensor", group: "Field", image: "/products/rain.jpg", summary: "Detects rain so irrigation can skip a run.", price: "On request" },
-  { name: "Weather Station", group: "Field", image: "/products/weather-station.jpg", summary: "Wind, rain, temperature, humidity and sunlight at the farm.", price: "On request" },
+  { name: "Shed Controller", group: "Shed", image: "/products/shed-controller.png", summary: "Runs fans, humidifier, heater and lights from one panel, with Auto, Semi and Manual modes.", price: "On request" },
+  { name: "Environmental Sensor", group: "Shed", image: "/products/environmental-sensor.png", summary: "Temperature, humidity, NH₃, CO₂ and light in the rearing shed.", price: "On request" },
+  { name: "Soil Moisture Sensor", group: "Field", image: "/products/soil-moisture.png", summary: "Soil moisture in the root zone, to drive irrigation.", price: "On request" },
+  { name: "Soil Temperature Sensor", group: "Field", image: "/products/soil-temperature.png", summary: "Root-zone soil temperature.", price: "On request" },
+  { name: "Soil EC Sensor", group: "Field", image: "/products/soil-ec.png", summary: "Soil salinity and nutrient level as electrical conductivity.", price: "On request" },
+  { name: "Soil pH Sensor", group: "Field", image: "/products/soil-ph.png", summary: "Soil acidity for fertiliser planning.", price: "On request" },
+  { name: "Water EC Sensor", group: "Field", image: "/products/water-ec.png", summary: "Irrigation and fertigation water quality.", price: "On request" },
+  { name: "Flow Sensor", group: "Field", image: "/products/flow.png", summary: "Water flow in the irrigation line, per valve or at the pump.", price: "On request" },
+  { name: "Pressure Sensor", group: "Field", image: "/products/pressure.png", summary: "Line pressure to confirm pumps and valves are delivering.", price: "On request" },
+  { name: "Tank Level Sensor", group: "Field", image: "/products/tank-level.png", summary: "Water or nutrient level in storage tanks.", price: "On request" },
+  { name: "Rain Sensor", group: "Field", image: "/products/rain.png", summary: "Detects rain so irrigation can skip a run.", price: "On request" },
+  { name: "Weather Station", group: "Field", image: "/products/weather-station.png", summary: "Wind, rain, temperature, humidity and sunlight at the farm.", price: "On request" },
 ];

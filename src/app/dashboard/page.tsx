@@ -1,37 +1,20 @@
 "use client";
 
-import { MapPin, Sprout, Warehouse } from "lucide-react";
+import { FlaskConical, MapPin, Sprout, Warehouse } from "lucide-react";
 
 import { ClimateStatusIcons } from "@/components/dashboard/climate-control";
 import { FertigationBoard } from "@/components/dashboard/fertigation-board";
 import { HistoryProvider } from "@/components/dashboard/history-dialog";
-import {
-  BigValue,
-  DoorTile,
-  ReadingTile,
-  SectionHeader,
-  SoilMoistureGauge,
-  WaterTankGauge,
-  formatCoordinate,
-  historyFor,
-  reading,
-  soilReadings,
-} from "@/components/dashboard/monitor-widgets";
+import { SectionHeader, SetpointsLink, formatCoordinate, reading } from "@/components/dashboard/monitor-widgets";
+import { SensorChipGrid, farmSensorChips, overviewGrid, shedSensorChips } from "@/components/dashboard/sensor-chip";
 import { ValveStatusStrip } from "@/components/dashboard/valve-control";
-import { Co2Icon, HumidityIcon, LightSensorIcon, Nh3Icon, TemperatureIcon } from "@/components/dashboard/sensor-icons";
 import { demoFarm, demoShed } from "@/data/mock";
 
-const airReadings = [
-  { sensor: reading("NH3"), label: "NH₃ (Ammonia)", icon: Nh3Icon },
-  { sensor: reading("CO2"), label: "CO₂", icon: Co2Icon },
-  { sensor: reading("Light"), label: "Light", icon: LightSensorIcon },
-];
-
+const shedChips = shedSensorChips();
+const farmChips = farmSensorChips();
 
 export default function DashboardHomePage() {
   const soil = reading("Soil Moisture");
-  const temperature = reading("Temperature");
-  const humidity = reading("Relative Humidity");
 
   return (
     <HistoryProvider>
@@ -58,49 +41,27 @@ export default function DashboardHomePage() {
           <span className="rounded-full bg-[var(--d-warn-soft)] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--d-warn)]">Demo / Simulated Data</span>
         </header>
 
-        <div className="grid items-start gap-6 xl:grid-cols-2">
-          <section aria-label="Shed monitoring">
-            <SectionHeader icon={Warehouse} title="Shed Monitoring" detail={`Silkworm rearing · ${demoShed.name} · ${demoShed.instar}`} />
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="grid grid-cols-2 gap-4 sm:col-span-2">
-                <BigValue
-                  title="Temperature"
-                  icon={TemperatureIcon}
-                  history={historyFor(temperature, "Shed Temperature", TemperatureIcon)}
-                  value={temperature?.value ?? "–"}
-                  unit="°C"
-                  note={temperature?.timestamp ?? ""}
-                />
-                <BigValue title="Humidity" icon={HumidityIcon} history={historyFor(humidity, "Shed Humidity", HumidityIcon)} value={humidity?.value ?? "–"} unit="%" note={humidity?.timestamp ?? ""} />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 sm:col-span-2 sm:grid-cols-4">
-                {airReadings.map((item) => (
-                  <ReadingTile key={item.label} {...item} />
-                ))}
-                <DoorTile />
-              </div>
-
-              <ClimateStatusIcons className="sm:col-span-2" />
+        {/* Three columns on wide screens: Shed, Farm and Fertigation. Two on laptops (Fertigation below), one on phones. */}
+        <div className="grid items-start gap-6 lg:grid-cols-2 xl:grid-cols-3">
+          <section aria-label="Shed monitoring" className="min-w-0">
+            <SectionHeader icon={Warehouse} title="Shed" detail={`Silkworm rearing · ${demoShed.name} · ${demoShed.instar}`} />
+            <div className="grid gap-3">
+              <SensorChipGrid items={shedChips} className={overviewGrid} size="sm" />
+              <ClimateStatusIcons />
             </div>
           </section>
 
-          <section aria-label="Farm monitoring">
-            <SectionHeader icon={Sprout} title="Farm Monitoring" detail={`Mulberry field · ${soil?.location ?? "Block A"} · ${demoFarm.acres} acres`} />
-            <div className="grid gap-4 sm:grid-cols-2">
-              <WaterTankGauge compact />
-              <SoilMoistureGauge compact />
-
-              <div className="grid grid-cols-3 gap-4 sm:col-span-2">
-                {soilReadings.map((item) => (
-                  <ReadingTile key={item.label} {...item} />
-                ))}
-              </div>
-
-              <FertigationBoard compact className="sm:col-span-2" />
-              <ValveStatusStrip className="sm:col-span-2" />
-
+          <section aria-label="Farm monitoring" className="min-w-0">
+            <SectionHeader icon={Sprout} title="Farm" detail={`Mulberry field · ${soil?.location ?? "Block A"} · ${demoFarm.acres} acres`} />
+            <div className="grid gap-3">
+              <SensorChipGrid items={farmChips} className={overviewGrid} size="sm" />
+              <ValveStatusStrip />
             </div>
+          </section>
+
+          <section aria-label="Fertigation" className="min-w-0 lg:col-span-2 xl:col-span-1">
+            <SectionHeader icon={FlaskConical} title="Fertigation" detail="Live nutrient readings · active recipe" action={<SetpointsLink area="fertigation" />} />
+            <FertigationBoard compact />
           </section>
         </div>
       </div>

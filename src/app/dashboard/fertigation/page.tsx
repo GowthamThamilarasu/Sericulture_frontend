@@ -4,18 +4,19 @@ import { useState } from "react";
 import { Beaker, BookOpenCheck, Container, Gauge, RotateCw, Target, Zap } from "lucide-react";
 
 import { Widget } from "@/components/dashboard/dashboard-widgets";
+import { DeviceRow } from "@/components/dashboard/device-row";
 import { FertigationBoard } from "@/components/dashboard/fertigation-board";
 import { NutrientTanks } from "@/components/dashboard/fertigation-tanks";
 import { SectionHeader, SetpointsLink } from "@/components/dashboard/monitor-widgets";
-import { ControlRow, DashboardPage, InfoRow, PageHeader, Pill, StatTile, buttonPrimary, buttonSecondary } from "@/components/dashboard/page-kit";
+import { DashboardPage, InfoRow, PageHeader, Pill, StatTile, buttonPrimary, buttonSecondary } from "@/components/dashboard/page-kit";
 import { WaterLevelIcon } from "@/components/dashboard/sensor-icons";
 import { fertigationSessions } from "@/data/mock";
 
 const devices = [
-  { name: "Dose Pump", icon: Gauge, status: "Standby" },
-  { name: "Mixing Tank", icon: Beaker, status: "Balanced" },
-  { name: "Agitator", icon: RotateCw, status: "Idle" },
-  { name: "Tank Filling Valve", icon: WaterLevelIcon, status: "Tank 72%" },
+  { name: "Dose Pump", icon: Gauge },
+  { name: "Mixing Tank", icon: Beaker },
+  { name: "Agitator", icon: RotateCw, spins: true },
+  { name: "Tank Filling Valve", icon: WaterLevelIcon },
 ];
 
 export default function FertigationPage() {
@@ -51,7 +52,7 @@ export default function FertigationPage() {
           <Widget title="Control Devices" icon={Container}>
             <div className="space-y-3">
               {devices.map((device) => (
-                <ControlRow key={device.name} {...device} />
+                <DeviceRow key={device.name} {...device} />
               ))}
             </div>
           </Widget>

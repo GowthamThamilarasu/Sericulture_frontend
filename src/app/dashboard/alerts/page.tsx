@@ -135,7 +135,7 @@ export default function AlertsPage() {
                   <span className={`mt-0.5 block truncate text-xs ${active ? "text-white/80" : "text-[var(--d-muted)]"}`}>{view.detail}</span>
                 </span>
                 {active && (
-                  <span className="absolute right-3 top-3 flex h-6 w-6 items-center justify-center rounded-full bg-white text-[#0f5c2e]">
+                  <span className="absolute right-3 top-3 flex h-6 w-6 items-center justify-center rounded-full bg-[#fff] text-[var(--d-accent-deep)]">
                     <Check className="h-3.5 w-3.5" aria-hidden="true" />
                   </span>
                 )}

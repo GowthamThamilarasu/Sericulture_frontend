@@ -111,7 +111,7 @@ function ScoreRing({ value, size = 112, stroke = 10, label }: { value: number; s
         <defs>
           <linearGradient id="ai-ring" x1="0" x2="1" y1="0" y2="1">
             <stop offset="0" stopColor="#e3f9a6" />
-            <stop offset="1" stopColor="#6fe07f" />
+            <stop offset="1" style={{ stopColor: "var(--d-accent-bright)" }} />
           </linearGradient>
         </defs>
       </svg>
@@ -153,8 +153,8 @@ export default function AIInsightsPage() {
     <DashboardPage tint="nutrient">
       <PageHeader icon={Cpu} eyebrow="AI Insights" title="Predictive analytics and farmer review" detail="Each recommendation waits for your approval before anything runs" />
 
-      <section aria-label="AI summary" className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#0f5c2e] via-[#11692f] to-[#082f17] p-6 text-white shadow-[0_24px_60px_-28px_rgb(6_40_20_/_0.9)] md:p-8">
-        <span aria-hidden="true" className="pointer-events-none absolute -right-16 -top-24 h-72 w-72 rounded-full bg-[#6fe07f]/25 blur-3xl" />
+      <section aria-label="AI summary" className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[var(--d-accent-deep)] via-[color-mix(in_srgb,var(--d-accent-deep)_80%,var(--d-accent-strong))] to-[color-mix(in_srgb,var(--d-accent-deep)_65%,black)] p-6 text-white shadow-[0_24px_60px_-28px_rgb(6_40_20_/_0.9)] md:p-8">
+        <span aria-hidden="true" className="pointer-events-none absolute -right-16 -top-24 h-72 w-72 rounded-full bg-[color-mix(in_srgb,var(--d-accent-bright)_25%,transparent)] blur-3xl" />
         <span aria-hidden="true" className="pointer-events-none absolute -bottom-24 left-1/4 h-60 w-60 rounded-full bg-[#e3b23c]/15 blur-3xl" />
         <div className="relative flex flex-col gap-6 md:flex-row md:items-center">
           <ScoreRing value={82} label="Farm health" />
@@ -212,10 +212,10 @@ export default function AIInsightsPage() {
               key={item.id}
               className={`dash-card group relative overflow-hidden rounded-3xl border bg-[var(--d-card)] transition-[box-shadow,translate] hover:-translate-y-0.5 hover:shadow-lg ${decision === "approved" ? "border-[var(--d-accent)]" : "border-[var(--d-card-border)]"} ${decision === "rejected" ? "opacity-70" : ""}`}
             >
-              <div className="h-1 w-full bg-gradient-to-r from-[#00a218] via-[#6fe07f] to-[#e3b23c]" />
+              <div className="h-1 w-full bg-gradient-to-r from-[var(--d-accent-strong)] via-[var(--d-accent-bright)] to-[#e3b23c]" />
               <div className="p-5">
                 <div className="flex items-start gap-3">
-                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#6fe07f] to-[#00a218] text-white shadow-[0_10px_22px_-10px_rgb(0_162_24_/_0.8)]">
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[var(--d-accent-bright)] to-[var(--d-accent-strong)] text-white shadow-[0_10px_22px_-10px_color-mix(in_srgb,var(--d-accent-strong)_80%,transparent)]">
                     <CategoryIcon className="h-6 w-6" aria-hidden="true" />
                   </span>
                   <div className="min-w-0 flex-1">

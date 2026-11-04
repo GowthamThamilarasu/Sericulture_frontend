@@ -1,12 +1,15 @@
 "use client";
 
 import { useEffect, useState, useSyncExternalStore } from "react";
-import { ChartLine, Check, FlaskConical, Link2, RotateCcw } from "lucide-react";
+import { ChartLine, Check, Droplets, FlaskConical, Flower2, Leaf, Link2, RotateCcw, Sprout, Zap } from "lucide-react";
 
-import { useOpenHistory } from "@/components/dashboard/history-dialog";
-import { Widget } from "@/components/dashboard/dashboard-widgets";
+import { type Icon, Widget } from "@/components/dashboard/dashboard-widgets";
 import { SetpointsLink } from "@/components/dashboard/monitor-widgets";
 import { Pill, Stepper, buttonSecondary } from "@/components/dashboard/page-kit";
+import { RangeCard, bandStatus } from "@/components/dashboard/range-card";
+import { type ChipMotion, SensorChipGrid, type SensorChipProps, overviewGrid } from "@/components/dashboard/sensor-chip";
+import { SoilPhIcon } from "@/components/dashboard/sensor-icons";
+import type { Tint } from "@/components/dashboard/tints";
 import { fertigationReadings, fertigationSessions } from "@/data/mock";
 import type { FertigationReading } from "@/types";
 
@@ -80,9 +83,18 @@ export function useFertigationSetpoints() {
 
 const round = (value: number, decimals: number) => Number(value.toFixed(decimals));
 
+// Icon, colour and idle motion for each reading's card.
+const readingLook: Record<Key, { label: string; icon: Icon; tint?: Tint; motion: ChipMotion }> = {
+  ph: { label: "Water pH", icon: SoilPhIcon, tint: "soil", motion: "sway" },
+  tds: { label: "TDS", icon: Droplets, tint: "water", motion: "bob" },
+  ec: { label: "EC", icon: Zap, tint: "nutrient", motion: "spark" },
+  n: { label: "Nitrogen · N", icon: Leaf, motion: "sway" },
+  p: { label: "Phosphorus · P", icon: Sprout, tint: "nutrient", motion: "pulse" },
+  k: { label: "Potassium · K", icon: Flower2, tint: "heat", motion: "glow" },
+};
+
 function LiveReadings({ values, ranges, compact }: { values: Values; ranges: Record<Key, Range>; compact?: boolean }) {
   const session = fertigationSessions[0];
-  const openHistory = useOpenHistory();
 
   return (
     <>
@@ -94,51 +106,37 @@ function LiveReadings({ values, ranges, compact }: { values: Values; ranges: Rec
         </span>
       </div>
 
-      <div className={compact ? "grid grid-cols-3 gap-2 sm:grid-cols-6" : "grid grid-cols-2 gap-3 sm:grid-cols-3"} aria-live="off">
-        {fertigationReadings.map((item) => {
+      <SensorChipGrid
+        className={compact ? `${overviewGrid} lg:grid-cols-6` : "grid-cols-2 sm:grid-cols-3 xl:grid-cols-6"}
+        size={compact ? "sm" : "md"}
+        items={fertigationReadings.map((item): SensorChipProps => {
           const value = values[item.key];
           const { min, max } = ranges[item.key];
-          const status = value < min ? "Low" : value > max ? "High" : "OK";
-          const color = status === "OK" ? "var(--d-tint, var(--d-accent))" : "var(--d-warn)";
-          return (
-            <button
-              key={item.key}
-              type="button"
-              onClick={() =>
-                openHistory({
-                  key: `fertigation-${item.key}`,
-                  label: `${item.name} (${item.label})`,
-                  unit: item.unit,
-                  decimals: item.decimals,
-                  value: round(value, item.decimals),
-                  icon: FlaskConical,
-                  target: [min, max],
-                  noise: (item.max - item.min) * 0.06,
-                  floor: 0,
-                })
-              }
-              title={compact ? `${item.name} · target ${min}–${max}` : undefined}
-              className={`rounded-md bg-[var(--d-inset)] text-left transition-colors hover:ring-2 hover:ring-[var(--d-accent)] ${compact ? "p-2" : "p-3"}`}
-            >
-              <div className="flex items-baseline justify-between gap-2">
-                <span className="text-sm font-bold text-[var(--d-text)]">{item.label}</span>
-                <span className="text-[10px] font-semibold uppercase tracking-[0.12em]" style={{ color }}>
-                  {status}
-                </span>
-              </div>
-              {!compact && <div className="truncate text-[10px] text-[var(--d-muted)]">{item.name}</div>}
-              <div className={`font-bold tabular-nums ${compact ? "mt-1 text-lg" : "mt-2 text-2xl"}`} style={{ color }}>
-                {value.toFixed(item.decimals)}
-                {item.unit && !compact && <span className="ml-1 text-xs font-medium text-[var(--d-muted)]">{item.unit}</span>}
-              </div>
-              <div className="mt-1 truncate text-[10px] text-[var(--d-muted)]">
-                {compact ? item.unit || "\u00a0" : `Target ${min}–${max}`}
-              </div>
-              <span className="sr-only">Show {item.name} history</span>
-            </button>
-          );
+          const status = value < min ? "Low" : value > max ? "High" : "In band";
+          const look = readingLook[item.key];
+          return {
+            label: look.label,
+            value: value.toFixed(item.decimals),
+            unit: item.unit || undefined,
+            icon: look.icon,
+            tint: look.tint,
+            motion: look.motion,
+            warn: status !== "In band",
+            status: `${status} · ${min}–${max}`,
+            history: {
+              key: `fertigation-${item.key}`,
+              label: `${item.name} (${item.label})`,
+              unit: item.unit,
+              decimals: item.decimals,
+              value: round(value, item.decimals),
+              icon: look.icon,
+              target: [min, max],
+              noise: (item.max - item.min) * 0.06,
+              floor: 0,
+            },
+          };
         })}
-      </div>
+      />
     </>
   );
 }
@@ -146,87 +144,11 @@ function LiveReadings({ values, ranges, compact }: { values: Values; ranges: Rec
 // Slider scale for each reading: wide enough to show the band with room either side.
 const scales: Record<Key, Range> = { ph: { min: 4, max: 9 }, ec: { min: 0, max: 2.5 }, tds: { min: 0, max: 1600 }, n: { min: 0, max: 300 }, p: { min: 0, max: 120 }, k: { min: 0, max: 400 } };
 
-const statusOf = (value: number, { min, max }: Range) => (value < min ? "Low" : value > max ? "High" : "In band");
+const statusOf = bandStatus;
 
-
-// Band slider: drag either handle to set the low or high limit; the marker shows the live reading.
-function BandSlider({ item, range, value, onChange }: { item: FertigationReading; range: Range; value: number; onChange: (next: Range) => void }) {
-  const scale = scales[item.key];
-  const step = steps[item.key];
-  const pct = (x: number) => Math.min(100, Math.max(0, ((x - scale.min) / (scale.max - scale.min)) * 100));
-  const out = value < range.min || value > range.max;
-  // When both handles sit at the top end, lift the low handle so it can still be dragged back down.
-  const lowOnTop = range.min > (scale.min + scale.max) / 2;
-
-  return (
-    <div className="pt-6">
-      <div className="relative h-6">
-        <div className="absolute inset-x-0 top-1/2 h-2 -translate-y-1/2 rounded-full bg-[var(--d-track)]" />
-        <div
-          className="absolute top-1/2 h-2 -translate-y-1/2 rounded-full"
-          style={{ left: `${pct(range.min)}%`, width: `${pct(range.max) - pct(range.min)}%`, backgroundColor: "var(--d-tint, var(--d-accent))", opacity: 0.55 }}
-        />
-        <div className="pointer-events-none absolute -top-6 flex -translate-x-1/2 flex-col items-center transition-[left] duration-700 ease-out" style={{ left: `${pct(value)}%` }} aria-hidden="true">
-          <span className="rounded px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-[var(--d-popup)] shadow-sm" style={{ backgroundColor: out ? "var(--d-warn)" : "var(--d-text)" }}>
-            {value.toFixed(item.decimals)}
-          </span>
-          <span className="h-0 w-0 border-x-4 border-t-4 border-x-transparent" style={{ borderTopColor: out ? "var(--d-warn)" : "var(--d-text)" }} />
-        </div>
-        <input
-          type="range"
-          aria-label={`${item.name} low limit`}
-          min={scale.min}
-          max={scale.max}
-          step={step}
-          value={range.min}
-          onChange={(event) => onChange({ ...range, min: round(Math.min(Number(event.target.value), range.max - step), item.decimals + 1) })}
-          className="dual-range"
-          style={{ zIndex: lowOnTop ? 3 : 2 }}
-        />
-        <input
-          type="range"
-          aria-label={`${item.name} high limit`}
-          min={scale.min}
-          max={scale.max}
-          step={step}
-          value={range.max}
-          onChange={(event) => onChange({ ...range, max: round(Math.max(Number(event.target.value), range.min + step), item.decimals + 1) })}
-          className="dual-range"
-          style={{ zIndex: lowOnTop ? 2 : 3 }}
-        />
-      </div>
-      <div className="mt-1 flex justify-between text-[10px] tabular-nums text-[var(--d-muted)]">
-        <span>{scale.min}</span>
-        <span>{scale.max}</span>
-      </div>
-    </div>
-  );
-}
 
 function ReadingCard({ item, range, value, onChange }: { item: FertigationReading; range: Range; value: number; onChange: (next: Range) => void }) {
-  const status = statusOf(value, range);
-  const step = steps[item.key];
-  const scale = scales[item.key];
-  return (
-    <div className="rounded-xl border border-[var(--d-card-border)] bg-[var(--d-inset)] p-4 transition-shadow hover:shadow-md">
-      <div className="flex items-start justify-between gap-2">
-        <div>
-          <div className="text-base font-bold text-[var(--d-text)]">
-            {item.label} {item.unit && <span className="text-xs font-medium text-[var(--d-muted)]">{item.unit}</span>}
-          </div>
-          <div className="text-[11px] text-[var(--d-muted)]">{item.name}</div>
-        </div>
-        <Pill tone={status === "In band" ? "accent" : "warn"}>{status}</Pill>
-      </div>
-
-      <BandSlider item={item} range={range} value={value} onChange={onChange} />
-
-      <div className="mt-3 grid grid-cols-2 gap-3">
-        <Stepper id={`fert-${item.key}-min`} label="Low" value={range.min} step={step} decimals={item.decimals + 1} min={scale.min} max={range.max - step} onChange={(min) => onChange({ ...range, min })} />
-        <Stepper id={`fert-${item.key}-max`} label="High" value={range.max} step={step} decimals={item.decimals + 1} min={range.min + step} max={scale.max} onChange={(max) => onChange({ ...range, max })} />
-      </div>
-    </div>
-  );
+  return <RangeCard id={`fert-${item.key}`} label={item.label} detail={item.name} unit={item.unit} scale={scales[item.key]} step={steps[item.key]} decimals={item.decimals} range={range} value={value} onChange={onChange} lowLabel="Low" highLabel="High" />;
 }
 
 function SetpointEditor({ values, current }: { values: Values; current: Setpoints }) {
@@ -352,6 +274,9 @@ export function FertigationBoard({ className, compact }: { className?: string; c
   const values = useLiveValues();
   const current = useFertigationSetpoints();
 
+  // Overview: just the small cards; the page gives the column its own header.
+  if (compact) return <LiveReadings values={values} ranges={current.ranges} compact />;
+
   return (
     <Widget
       title="Fertigation"
@@ -367,7 +292,7 @@ export function FertigationBoard({ className, compact }: { className?: string; c
         </span>
       }
     >
-      <LiveReadings values={values} ranges={current.ranges} compact={compact} />
+      <LiveReadings values={values} ranges={current.ranges} />
     </Widget>
   );
 }

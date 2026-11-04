@@ -25,7 +25,7 @@ export default function ClimatePage() {
       <PageHeader icon={MonitorCog} eyebrow="Climate Control" title="Operational climate management" detail={`${demoShed.name} · ${demoShed.instar}`} />
 
       <section aria-label="Control mode">
-        <SectionHeader icon={SlidersHorizontal} title="Control Mode" detail="How the shed's climate equipment is run · applies to every device below" />
+        <SectionHeader icon={SlidersHorizontal} title="Control Mode" detail={mode === "mixed" ? "Devices use different modes · pick one to set every device at once" : "Sets every shed device at once · each device can also be changed on its own below"} />
         <ClimateModeSwitch />
       </section>
 
@@ -42,7 +42,7 @@ export default function ClimatePage() {
         <SectionHeader
           icon={Fan}
           title="Equipment"
-          detail={mode === "auto" ? "Running automatically from the readings and limits" : mode === "semi" ? "Review the suggested changes, then approve or keep" : "Switch each device on or off"}
+          detail={mode === "mixed" ? "Devices use different modes · each row shows and changes its own" : mode === "auto" ? "Running automatically from the active shed model and limits" : mode === "semi" ? "Switching a device on asks for the value it should reach" : "Switch each device on or off · no target asked"}
           action={<SetpointsLink area="shed" />}
         />
         <ClimateEquipment />

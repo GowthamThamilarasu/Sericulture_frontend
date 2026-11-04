@@ -6,7 +6,8 @@ import { Archive, Bell, Bug, Cpu, Download, Egg, Eye, FileJson, FileSpreadsheet,
 
 import { useAutomationModels, modelFields } from "@/components/dashboard/automation-models";
 import { formatDate, useBatches } from "@/components/dashboard/batch-store";
-import { climateEquipment, useClimate } from "@/components/dashboard/climate-control";
+import { useClimate } from "@/components/dashboard/climate-control";
+import { farmValveById } from "@/components/dashboard/farm-devices";
 import { type Icon } from "@/components/dashboard/dashboard-widgets";
 import { useNutrientTanks } from "@/components/dashboard/fertigation-tanks";
 import { useIrrigationPlan } from "@/components/dashboard/irrigation-planner";
@@ -16,7 +17,7 @@ import { useNotifications } from "@/components/dashboard/notifications";
 import { DashboardPage, PageHeader, buttonPrimary, buttonSecondary } from "@/components/dashboard/page-kit";
 import { medicationsFor, useSilkwormHealth } from "@/components/dashboard/silkworm-health";
 import { useWaterSources } from "@/components/dashboard/water-sources";
-import { aiInsights, farmValves, fertigationReadings, fertigationSessions, irrigationSessions, sensorReadings } from "@/data/mock";
+import { aiInsights, fertigationReadings, fertigationSessions, irrigationSessions, sensorReadings } from "@/data/mock";
 import { type Report, download, fileSlug, printReport, toCsv, toDocx, toJson, toXlsx } from "@/lib/export";
 
 // Every setting and record the dashboard keeps in this browser; the backup saves and restores them all.
@@ -141,7 +142,7 @@ export default function ReportsPage() {
   const [message, setMessage] = useState("");
   const importInput = useRef<HTMLInputElement>(null);
   const blockName = (id: string) => (id === "all" ? "All blocks" : (blocks.find((block) => block.id === id)?.name ?? "Removed block"));
-  const valveName = (id: string) => farmValves.find((valve) => valve.id === id)?.name ?? id;
+  const valveName = (id: string) => farmValveById(id)?.name ?? id;
 
   const reports: ReportCard[] = [
     {
@@ -260,10 +261,10 @@ export default function ReportsPage() {
       icon: Warehouse,
       build: () => ({
         title: "Farm & Shed Environment Report",
-        subtitle: `Climate control: ${climate.mode === "auto" ? "Automatic" : climate.mode === "semi" ? "Semi-automatic" : "Manual"}`,
+        subtitle: `Climate control: ${climate.mode === "auto" ? "Automatic" : climate.mode === "semi" ? "Semi-automatic" : climate.mode === "manual" ? "Manual" : "Mixed modes"}`,
         tables: [
           { heading: "Sensor readings", columns: ["Sensor", "Value", "Unit", "Location", "Status", "Updated"], rows: sensorReadings.map((item) => [item.name, item.value, item.unit, item.location, item.status, item.timestamp]) },
-          { heading: "Climate equipment", columns: ["Device", "Group", "State", "Reason (automatic)"], rows: climateEquipment.map((item) => [item.name, item.group, climate.isOn(item.name) ? "On" : "Off", climate.mode === "auto" ? climate.plan[item.name]?.reason : ""]) },
+          { heading: "Shed equipment", columns: ["Device", "Group", "State", "Reason (automatic)"], rows: climate.equipment.map((item) => [item.name, item.group, climate.isOn(item.name) ? "On" : "Off", climate.modeOf(item.name) === "auto" ? climate.plan[item.name]?.reason : ""]) },
         ],
       }),
     },
@@ -348,8 +349,8 @@ export default function ReportsPage() {
     <DashboardPage tint="slate">
       <PageHeader icon={FileText} eyebrow="Reports" title="Operational and AI reporting" detail="View any report, or export it as PDF, Word, Excel or CSV" />
 
-      <section aria-label="Export everything" className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#0f5c2e] via-[#11692f] to-[#082f17] p-6 text-white">
-        <span aria-hidden="true" className="pointer-events-none absolute -right-12 -top-16 h-56 w-56 rounded-full bg-[#6fe07f]/25 blur-3xl" />
+      <section aria-label="Export everything" className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[var(--d-accent-deep)] via-[color-mix(in_srgb,var(--d-accent-deep)_80%,var(--d-accent-strong))] to-[color-mix(in_srgb,var(--d-accent-deep)_65%,black)] p-6 text-white">
+        <span aria-hidden="true" className="pointer-events-none absolute -right-12 -top-16 h-56 w-56 rounded-full bg-[color-mix(in_srgb,var(--d-accent-bright)_25%,transparent)] blur-3xl" />
         <div className="relative grid gap-6 lg:grid-cols-2">
           <div>
             <div className="flex items-center gap-2 text-lg font-bold">
@@ -357,7 +358,7 @@ export default function ReportsPage() {
             </div>
             <p className="mt-1 text-sm text-white/75">Every report below in one file: yield, silkworm, mulberry, irrigation, fertigation, environment, automation, alerts and AI.</p>
             <div className="mt-4 flex flex-wrap gap-2">
-              <button type="button" onClick={() => setPreview(everything())} className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-2 text-xs font-bold text-[#0f5c2e] hover:bg-white/90">
+              <button type="button" onClick={() => setPreview(everything())} className="inline-flex items-center gap-1.5 rounded-lg bg-[#fff] px-3 py-2 text-xs font-bold text-[var(--d-accent-deep)] hover:bg-white/90">
                 <Eye className="h-3.5 w-3.5" aria-hidden="true" /> View
               </button>
               {[
@@ -377,7 +378,7 @@ export default function ReportsPage() {
             </div>
             <p className="mt-1 text-sm text-white/75">All settings and records (farm, batches, schedules, models, tanks, devices, users) in one file. Restore it on another browser or after clearing data.</p>
             <div className="mt-3 flex flex-wrap gap-2">
-              <button type="button" onClick={backup} className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-2 text-xs font-bold text-[#0f5c2e] hover:bg-white/90">
+              <button type="button" onClick={backup} className="inline-flex items-center gap-1.5 rounded-lg bg-[#fff] px-3 py-2 text-xs font-bold text-[var(--d-accent-deep)] hover:bg-white/90">
                 <FileJson className="h-3.5 w-3.5" aria-hidden="true" /> Export settings
               </button>
               <button type="button" onClick={() => importInput.current?.click()} className="inline-flex items-center gap-1.5 rounded-lg bg-white/15 px-3 py-2 text-xs font-semibold ring-1 ring-white/20 hover:bg-white/25">
@@ -400,7 +401,7 @@ export default function ReportsPage() {
           {reports.map((card) => (
             <article key={card.id} className="dash-card flex flex-col rounded-2xl border border-[var(--d-card-border)] bg-[var(--d-card)] p-5 transition-[box-shadow,translate] hover:-translate-y-0.5 hover:shadow-md">
               <div className="flex items-start gap-3">
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#6fe07f] to-[#00a218] text-white">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--d-accent-bright)] to-[var(--d-accent-strong)] text-white">
                   <card.icon className="h-5 w-5" aria-hidden="true" />
                 </span>
                 <div className="min-w-0">

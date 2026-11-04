@@ -5,16 +5,18 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { Clock, Maximize2, Plus, RotateCcw, Trash2, X } from "lucide-react";
 
 import { Toggle } from "@/components/dashboard/dashboard-widgets";
+import { farmValveById, useFarmDevices } from "@/components/dashboard/farm-devices";
 import { InfoRow, Pill, buttonPrimary, buttonSecondary } from "@/components/dashboard/page-kit";
-import { farmValves, irrigationSchedules, volumeSettings as initialVolumes } from "@/data/mock";
+import { irrigationSchedules, volumeSettings as initialVolumes } from "@/data/mock";
 import type { IrrigationSchedule, VolumeSettings, Weekday } from "@/types";
 
 const weekdays: Weekday[] = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-const valveById = Object.fromEntries(farmValves.map((valve) => [valve.id, valve]));
+// Valves are added and removed on the Farm Monitor (farm-devices.ts).
+const valveOf = (id: string) => farmValveById(id);
 
 // Litres a run delivers: its volume limit, or duration × the valve's flow rate.
-const runLitres = (schedule: IrrigationSchedule) => (schedule.limit === "volume" ? schedule.volume : schedule.duration * (valveById[schedule.valveId]?.flowRate ?? 0));
-const runMinutes = (schedule: IrrigationSchedule) => (schedule.limit === "duration" ? schedule.duration : schedule.volume / Math.max(valveById[schedule.valveId]?.flowRate ?? 1, 1));
+const runLitres = (schedule: IrrigationSchedule) => (schedule.limit === "volume" ? schedule.volume : schedule.duration * (valveOf(schedule.valveId)?.flowRate ?? 0));
+const runMinutes = (schedule: IrrigationSchedule) => (schedule.limit === "duration" ? schedule.duration : schedule.volume / Math.max(valveOf(schedule.valveId)?.flowRate ?? 1, 1));
 
 // Current minute on the client (null while server rendering), refreshed every 30 s.
 function subscribeMinute(listener: () => void) {
@@ -65,7 +67,8 @@ function NumberField({ id, label, value, unit, min = 0, max, step = 1, onChange 
 }
 
 function ScheduleRow({ schedule, onChange, onRemove }: { schedule: IrrigationSchedule; onChange: (next: Partial<IrrigationSchedule>) => void; onRemove: () => void }) {
-  const valve = valveById[schedule.valveId];
+  const { valves: valveOptions } = useFarmDevices();
+  const valve = valveOf(schedule.valveId);
   const toggleDay = (day: Weekday) => onChange({ days: schedule.days.includes(day) ? schedule.days.filter((value) => value !== day) : weekdays.filter((value) => value === day || schedule.days.includes(value)) });
   const fieldClass = "rounded-md border border-[var(--d-line)] bg-[var(--d-popup)] px-2 py-1.5 text-sm font-semibold text-[var(--d-text)] outline-none";
 
@@ -74,7 +77,7 @@ function ScheduleRow({ schedule, onChange, onRemove }: { schedule: IrrigationSch
       <div className="flex flex-wrap items-center gap-3">
         <Toggle size="sm" on={schedule.enabled} onChange={() => onChange({ enabled: !schedule.enabled })} label={`Schedule for ${valve?.name ?? "valve"} enabled`} />
         <select aria-label="Valve" value={schedule.valveId} onChange={(event) => onChange({ valveId: event.target.value })} className={fieldClass}>
-          {farmValves.map((option) => (
+          {valveOptions.map((option) => (
             <option key={option.id} value={option.id}>
               {option.name} · {option.zone}
             </option>
@@ -147,7 +150,7 @@ const clock = (time: string) => {
 
 // Small summary card in the scheduler grid; the switch works in place, the rest opens the editor popup.
 function ScheduleCard({ schedule, onToggle, onOpen }: { schedule: IrrigationSchedule; onToggle: () => void; onOpen: () => void }) {
-  const valve = valveById[schedule.valveId];
+  const valve = valveOf(schedule.valveId);
   const amount = schedule.limit === "volume" ? `${schedule.volume} L · ≈ ${Math.round(runMinutes(schedule))} min` : `${schedule.duration} min · ≈ ${Math.round(runLitres(schedule))} L`;
   return (
     <div className={`group flex flex-col rounded-xl border border-[var(--d-card-border)] bg-[var(--d-inset)] p-3 transition-[box-shadow,translate,opacity] hover:-translate-y-0.5 hover:shadow-md ${schedule.enabled ? "" : "opacity-60"}`}>
@@ -245,14 +248,15 @@ const dayPresets: { label: string; days: Weekday[] }[] = [
 
 // Form for a new schedule. Mounted only while open, so it starts fresh each time.
 function AddScheduleForm({ volumes, onAdd }: { volumes: VolumeSettings; onAdd: (schedule: IrrigationSchedule) => void }) {
-  const [valveId, setValveId] = useState(farmValves[0].id);
+  const { valves: valveOptions } = useFarmDevices();
+  const [valveId, setValveId] = useState(valveOptions[0]?.id ?? "");
   const [start, setStart] = useState("06:00");
   const [days, setDays] = useState<Weekday[]>(["Mon", "Wed", "Fri"]);
   const [limit, setLimit] = useState<IrrigationSchedule["limit"]>("volume");
-  const [amount, setAmount] = useState(String(volumes.perCycle[farmValves[0].id] ?? farmValves[0].volume));
+  const [amount, setAmount] = useState(String((valveOptions[0] ? (volumes.perCycle[valveOptions[0].id] ?? valveOptions[0].volume) : 300)));
   const [enabled, setEnabled] = useState(true);
 
-  const valve = valveById[valveId];
+  const valve = valveOf(valveId);
   const value = Number(amount);
   const amountOk = amount.trim() !== "" && Number.isFinite(value) && value >= 1 && value <= (limit === "volume" ? 10000 : 600);
   const valid = amountOk && days.length > 0 && /^\d{2}:\d{2}$/.test(start);
@@ -261,8 +265,8 @@ function AddScheduleForm({ volumes, onAdd }: { volumes: VolumeSettings; onAdd: (
 
   // Switching valve or limit refills the amount with that valve's default run.
   const defaults = (id: string, nextLimit: IrrigationSchedule["limit"]) => {
-    const litres = volumes.perCycle[id] ?? valveById[id]?.volume ?? 100;
-    setAmount(String(nextLimit === "volume" ? litres : Math.max(1, Math.round(litres / Math.max(valveById[id]?.flowRate ?? 1, 1)))));
+    const litres = volumes.perCycle[id] ?? valveOf(id)?.volume ?? 100;
+    setAmount(String(nextLimit === "volume" ? litres : Math.max(1, Math.round(litres / Math.max(valveOf(id)?.flowRate ?? 1, 1)))));
   };
   const toggleDay = (day: Weekday) => setDays((current) => (current.includes(day) ? current.filter((value) => value !== day) : weekdays.filter((value) => value === day || current.includes(value))));
 
@@ -307,7 +311,7 @@ function AddScheduleForm({ volumes, onAdd }: { volumes: VolumeSettings; onAdd: (
                 }}
                 className={`mt-1.5 ${field}`}
               >
-                {farmValves.map((option) => (
+                {valveOptions.map((option) => (
                   <option key={option.id} value={option.id}>
                     {option.name} · {option.zone}
                   </option>
@@ -427,7 +431,7 @@ export function SchedulerPanel({ plan }: { plan: Plan }) {
         <div className="text-xs text-[var(--d-muted)]">
           {upcoming ? (
             <>
-              Next run: <span className="font-semibold text-[var(--d-text)]">{valveById[upcoming.schedule.valveId]?.name}</span> · {upcoming.day} {upcoming.schedule.start} · ≈ {Math.round(runLitres(upcoming.schedule))} L
+              Next run: <span className="font-semibold text-[var(--d-text)]">{valveOf(upcoming.schedule.valveId)?.name}</span> · {upcoming.day} {upcoming.schedule.start} · ≈ {Math.round(runLitres(upcoming.schedule))} L
             </>
           ) : minute === null ? (
             "Working out the next run…"
@@ -489,6 +493,7 @@ export function SchedulerPanel({ plan }: { plan: Plan }) {
 }
 
 export function VolumePanel({ plan }: { plan: Plan }) {
+  const { valves: valveOptions } = useFarmDevices();
   const { schedules, volumes, setVolumes } = plan;
   const planned = plannedByDay(schedules);
   const peak = Math.max(...planned.map((item) => item.litres), volumes.dailyBudget, 1);
@@ -501,7 +506,7 @@ export function VolumePanel({ plan }: { plan: Plan }) {
         <NumberField id="vol-flow" label="Max line flow" value={volumes.maxFlow} unit="L/min" step={5} onChange={(maxFlow) => setVolumes((current) => ({ ...current, maxFlow }))} />
 
         <div className="mt-4 text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--d-muted)]">Default volume per run</div>
-        {farmValves.map((valve) => (
+        {valveOptions.map((valve) => (
           <NumberField
             key={valve.id}
             id={`vol-${valve.id}`}

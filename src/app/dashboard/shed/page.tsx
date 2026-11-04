@@ -5,54 +5,32 @@ import { ChartLine, Gauge, Layers, MonitorCog, Warehouse, Wind } from "lucide-re
 import { ClimateStatusIcons } from "@/components/dashboard/climate-control";
 
 import { Widget } from "@/components/dashboard/dashboard-widgets";
-import {
-  AlertList,
-  BigValue,
-  DoorTile,
-  ReadingTile,
-  SectionHeader,
-  historyFor,
-  reading,
-  shedAlerts,
-} from "@/components/dashboard/monitor-widgets";
-import { DashboardPage, InfoRow, PageHeader, Pill, StatTile, TrendChart } from "@/components/dashboard/page-kit";
-import { Co2Icon, HumidityIcon, LightSensorIcon, Nh3Icon, TemperatureIcon } from "@/components/dashboard/sensor-icons";
+import { AlertList, SectionHeader, shedAlerts } from "@/components/dashboard/monitor-widgets";
+import { DashboardPage, InfoRow, PageHeader, Pill, TrendChart } from "@/components/dashboard/page-kit";
+import { SensorChipGrid, type SensorChipProps, shedSensorChips } from "@/components/dashboard/sensor-chip";
+import { HumidityIcon, TemperatureIcon } from "@/components/dashboard/sensor-icons";
 import { demoShed, instarStages, temperatureHistory } from "@/data/mock";
 
-const airReadings = [
-  { sensor: reading("NH3"), label: "NH₃ (Ammonia)", icon: Nh3Icon },
-  { sensor: reading("CO2"), label: "CO₂", icon: Co2Icon },
-  { sensor: reading("Light"), label: "Light", icon: LightSensorIcon },
+// Shed readings with no history: air pressure, ventilation level and the batch's instar.
+const shedStatus: SensorChipProps[] = [
+  { label: "Pressure", value: "101.4", unit: "kPa", icon: Gauge, tint: "air", motion: "tick", status: "Normal", note: "Barometric" },
+  { label: "Ventilation", value: "Moderate", icon: Wind, tint: "air", warn: true, status: "Moderate", note: "Air exchange" },
+  { label: "Current Instar", value: demoShed.instar.replace(" INSTAR", ""), icon: Layers, tint: "nutrient", motion: "pulse", note: demoShed.status },
 ];
+
+const shedChips = [...shedSensorChips(), ...shedStatus];
 
 // The batch is in IV instar, so the "4th & 5th" band is the active one.
 const activeStage = instarStages[instarStages.length - 1].stage;
 
 export default function ShedMonitorPage() {
-  const temperature = reading("Temperature");
-  const humidity = reading("Relative Humidity");
-
   return (
     <DashboardPage tint="air">
       <PageHeader icon={Warehouse} eyebrow="Shed Monitor" title="Environmental condition and instar status" detail={`Silkworm rearing · ${demoShed.name} · ${demoShed.instar} · capacity ${demoShed.capacity.toLocaleString()}`} />
 
       <section aria-label="Shed sensors">
         <SectionHeader icon={TemperatureIcon} title="Shed Sensors" detail={`Live air readings · ${demoShed.name} · tap a card for its history`} />
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <BigValue title="Temperature" icon={TemperatureIcon} history={historyFor(temperature, "Shed Temperature", TemperatureIcon)} value={temperature?.value ?? "–"} unit="°C" note={temperature?.timestamp ?? ""} />
-          <BigValue title="Humidity" icon={HumidityIcon} history={historyFor(humidity, "Shed Humidity", HumidityIcon)} value={humidity?.value ?? "–"} unit="%" note={humidity?.timestamp ?? ""} />
-          <div className="grid grid-cols-2 gap-4 sm:col-span-2">
-            {airReadings.map((item) => (
-              <ReadingTile key={item.label} {...item} />
-            ))}
-            <DoorTile />
-          </div>
-        </div>
-        <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3">
-          <StatTile label="Pressure" value="101.4" unit="kPa" icon={Gauge} />
-          <StatTile label="Ventilation" value="Moderate" icon={Wind} tone="warn" />
-          <StatTile label="Current Instar" value={demoShed.instar.replace(" INSTAR", "")} icon={Layers} note={demoShed.status} />
-        </div>
+        <SensorChipGrid items={shedChips} />
       </section>
 
       <section aria-label="Climate status">

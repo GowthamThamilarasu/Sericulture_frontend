@@ -1,124 +1,48 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
 import Link from "next/link";
-import { Bot, Check, ChevronRight, CloudDrizzle, Fan, Hand, Heater, Snowflake, UserCog, Wind, X } from "lucide-react";
+import { Bot, Check, ChevronRight, Hand, Settings, SlidersHorizontal, UserCog } from "lucide-react";
 
-import { type ControllerMode, setControllerMode, useControllerMode } from "@/components/dashboard/controller-mode";
-import { type Icon, Toggle, Widget } from "@/components/dashboard/dashboard-widgets";
-import { reading, shedSetpoints } from "@/components/dashboard/monitor-widgets";
-import { Pill, activeHighlight, buttonPrimary, buttonSecondary } from "@/components/dashboard/page-kit";
+import { setClimateLimit, setClimateOn, useClimateState } from "@/components/dashboard/climate-store";
+import { type ControllerMode, setControllerMode, useControllerMode, useControllerModes } from "@/components/dashboard/controller-mode";
+import { type Icon, Widget } from "@/components/dashboard/dashboard-widgets";
+import { shedRule, useActiveModel, useNow } from "@/components/dashboard/device-automation";
+import { DeviceRow } from "@/components/dashboard/device-row";
+import { activeHighlight } from "@/components/dashboard/page-kit";
+import { currentShedDevices, shedGroups, useShedEquipment } from "@/components/dashboard/shed-devices";
 
-// Climate control for the rearing shed. The controls live on the Climate Control tab only;
-// other tabs show the equipment as status icons (ClimateStatusIcons).
+// Climate control for the rearing shed. The equipment is the shed device list set up under Settings → Shed
+// (shed-devices.ts). The controls live on the Climate Control tab; other tabs show the equipment as status icons.
 
 export const climateSystem = "Climate System";
 
-export const climateEquipment: { name: string; group: "Ventilation" | "Humidity" | "Temperature"; icon: Icon; spins?: boolean }[] = [
-  { name: "Fan Stage 1", group: "Ventilation", icon: Fan, spins: true },
-  { name: "Fan Stage 2", group: "Ventilation", icon: Fan, spins: true },
-  { name: "Circulation Fan", group: "Ventilation", icon: Wind, spins: true },
-  { name: "Fogger", group: "Humidity", icon: CloudDrizzle },
-  { name: "Humidifier", group: "Humidity", icon: CloudDrizzle },
-  { name: "Heater", group: "Temperature", icon: Heater },
-  { name: "Cooling", group: "Temperature", icon: Snowflake },
-];
-export const climateGroups = [
-  { group: "Ventilation", icon: Wind },
-  { group: "Humidity", icon: CloudDrizzle },
-  { group: "Temperature", icon: Heater },
-] as const;
-
 export const climateModes: { value: ControllerMode; label: string; detail: string; icon: Icon }[] = [
-  { value: "auto", label: "Automatic", detail: "Equipment follows the readings and limits on its own", icon: Bot },
-  { value: "semi", label: "Semi-automatic", detail: "The system suggests changes, you approve them", icon: UserCog },
-  { value: "manual", label: "Manual", detail: "You switch each device on and off", icon: Hand },
+  { value: "auto", label: "Automatic", detail: "Equipment follows the active shed model on its own", icon: Bot },
+  { value: "semi", label: "Semi-automatic", detail: "Each device asks for a target value when you switch it on", icon: UserCog },
+  { value: "manual", label: "Manual", detail: "Plain on/off for each device, no target asked", icon: Hand },
 ];
 
-// ---- Saved state: device on/off and the shed limits, shared by every tab ----
-
-type ClimateState = { on: Record<string, boolean>; limits: Record<string, number> };
-const storageKey = "climate-control";
-const defaultState: ClimateState = {
-  on: { "Fan Stage 1": true, "Fan Stage 2": false, "Circulation Fan": true, Fogger: false, Humidifier: false, Heater: false, Cooling: false },
-  limits: Object.fromEntries(shedSetpoints.map((item) => [item.key, item.value])),
-};
-const listeners = new Set<() => void>();
-let state: ClimateState | null = null;
-
-function read(): ClimateState {
-  if (state) return state;
-  state = defaultState;
-  try {
-    const saved = JSON.parse(localStorage.getItem(storageKey) ?? "null") as Partial<ClimateState> | null;
-    if (saved) state = { on: { ...defaultState.on, ...saved.on }, limits: { ...defaultState.limits, ...saved.limits } };
-  } catch {
-    // Storage blocked or unreadable: keep the defaults.
-  }
-  return state;
-}
-
-function write(next: ClimateState) {
-  state = next;
-  try {
-    localStorage.setItem(storageKey, JSON.stringify(next));
-  } catch {
-    // Storage blocked: the change still applies until the page reloads.
-  }
-  listeners.forEach((listener) => listener());
-}
-
-function subscribe(listener: () => void) {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
-}
-
-/** Switches the whole climate system's mode, and every climate device with it. */
+/** Switches the whole climate system's mode, and every shed device with it. */
 export function setClimateMode(mode: ControllerMode) {
   setControllerMode(climateSystem, mode);
-  climateEquipment.forEach((item) => setControllerMode(item.name, mode));
+  currentShedDevices().forEach((item) => setControllerMode(item.name, mode));
 }
 
-// What automatic control would do right now, and why.
-function automaticPlan(limits: Record<string, number>) {
-  const temp = reading("Temperature")?.value ?? 0;
-  const rh = reading("Relative Humidity")?.value ?? 0;
-  const nh3 = reading("NH3")?.value ?? 0;
-  const co2 = reading("CO2")?.value ?? 0;
-  const maxTemp = limits.temp ?? 28;
-  const maxRh = limits.rh ?? 80;
-  const nh3Limit = limits.nh3 ?? 5;
-  const co2Limit = limits.co2 ?? 1000;
-  const airBad = nh3 > nh3Limit * 0.7 || co2 > co2Limit * 0.85;
-
-  const plan: Record<string, { on: boolean; reason: string }> = {
-    "Fan Stage 1": airBad || temp > maxTemp || rh > maxRh ? { on: true, reason: nh3 > nh3Limit * 0.7 ? `NH₃ ${nh3} ppm is near the ${nh3Limit} ppm limit` : co2 > co2Limit * 0.85 ? `CO₂ ${co2} ppm is near its limit` : temp > maxTemp ? `Temperature above ${maxTemp} °C` : `Humidity above ${maxRh}%` } : { on: false, reason: "Air quality and temperature are fine" },
-    "Fan Stage 2": nh3 > nh3Limit || co2 > co2Limit || temp > maxTemp + 1 ? { on: true, reason: "Readings past their limits: full ventilation" } : { on: false, reason: "Only needed when readings pass their limits" },
-    "Circulation Fan": { on: true, reason: "Keeps air moving over the beds during rearing" },
-    Fogger: rh < maxRh - 20 ? { on: true, reason: `Humidity ${rh}% is well below target` } : { on: false, reason: `Humidity ${rh}% is high enough` },
-    Humidifier: rh < maxRh - 12 ? { on: true, reason: `Humidity ${rh}% is below target` } : { on: false, reason: `Humidity ${rh}% is within target` },
-    Heater: temp < maxTemp - 4 ? { on: true, reason: `Temperature ${temp} °C is below ${maxTemp - 4} °C` } : { on: false, reason: `Temperature ${temp} °C is warm enough` },
-    Cooling: temp > maxTemp + 1 ? { on: true, reason: `Temperature ${temp} °C is above ${maxTemp + 1} °C` } : { on: false, reason: `Temperature ${temp} °C is below ${maxTemp} °C` },
-  };
-  return plan;
-}
-
+// What Auto mode would do with each shed device right now, and why: the active shed model, kept inside the shed limits.
 export function useClimate() {
-  const { on, limits } = useSyncExternalStore(subscribe, read, () => defaultState);
-  const mode = useControllerMode(climateSystem);
-  const plan = automaticPlan(limits);
-  // In automatic mode the equipment follows the plan; otherwise it holds the saved state.
-  const isOn = (name: string) => (mode === "auto" ? plan[name]?.on : on[name]) ?? false;
-  const suggestions = mode === "semi" ? climateEquipment.filter((item) => (plan[item.name]?.on ?? false) !== (on[item.name] ?? false)) : [];
-  return {
-    mode,
-    limits,
-    plan,
-    isOn,
-    suggestions,
-    setOn: (name: string, value: boolean) => write({ ...read(), on: { ...read().on, [name]: value } }),
-    setLimit: (key: string, value: number) => write({ ...read(), limits: { ...read().limits, [key]: value } }),
-  };
+  const { on, limits } = useClimateState();
+  const equipment = useShedEquipment();
+  const systemMode = useControllerMode(climateSystem);
+  const modes = useControllerModes(equipment.map((item) => item.name));
+  // The shed's mode is the devices' mode when they all agree, otherwise "mixed".
+  const mode: ControllerMode | "mixed" = modes.length === 0 ? systemMode : modes.every((value) => value === modes[0]) ? modes[0] : "mixed";
+  const model = useActiveModel("shed");
+  const now = useNow();
+  const plan = Object.fromEntries(equipment.map((item) => [item.name, shedRule(item.name, model.values, limits, now)]));
+  const modeOf = (name: string): ControllerMode => modes[equipment.findIndex((item) => item.name === name)] ?? systemMode;
+  // A device in Auto follows the plan; in Semi-auto or Manual it holds its saved state.
+  const isOn = (name: string) => (modeOf(name) === "auto" ? plan[name]?.on : on[name]) ?? false;
+  return { mode, modeOf, equipment, limits, plan, isOn, setOn: setClimateOn, setLimit: setClimateLimit };
 }
 
 // ---- Climate Control tab: the mode switch and the equipment ----
@@ -148,7 +72,7 @@ export function ClimateModeSwitch() {
               <span className={`mt-0.5 block text-xs leading-5 ${active ? "text-white/80" : "text-[var(--d-muted)]"}`}>{item.detail}</span>
             </span>
             {active && (
-              <span className="absolute right-3 top-3 flex h-6 w-6 items-center justify-center rounded-full bg-white text-[#0f5c2e]">
+              <span className="absolute right-3 top-3 flex h-6 w-6 items-center justify-center rounded-full bg-[#fff] text-[var(--d-accent-deep)]">
                 <Check className="h-3.5 w-3.5" aria-hidden="true" />
               </span>
             )}
@@ -160,72 +84,38 @@ export function ClimateModeSwitch() {
 }
 
 export function ClimateEquipment() {
-  const { mode, plan, isOn, setOn, suggestions } = useClimate();
+  const equipment = useShedEquipment();
+  const groups = shedGroups.filter((group) => equipment.some((item) => item.group === group.group));
+
+  if (!equipment.length)
+    return (
+      <div className="rounded-2xl border-2 border-dashed border-[var(--d-card-border)] p-8 text-center text-sm text-[var(--d-muted)]">
+        No shed devices yet.{" "}
+        <Link href="/dashboard/settings/?tab=shed" className="font-semibold text-[var(--d-accent)] hover:underline">
+          Add them under Settings → Shed
+        </Link>
+      </div>
+    );
 
   return (
-    <div className="space-y-4">
-      {mode === "semi" && (
-        <Widget title="Suggested changes" icon={UserCog} action={<Pill tone={suggestions.length ? "warn" : "accent"}>{suggestions.length ? `${suggestions.length} to review` : "Nothing to approve"}</Pill>}>
-          {suggestions.length === 0 ? (
-            <p className="text-sm text-[var(--d-soft)]">The equipment already matches what automatic control would do.</p>
-          ) : (
-            <div className="space-y-2">
-              {suggestions.map((item) => {
-                const next = plan[item.name];
-                return (
-                  <div key={item.name} className="flex flex-wrap items-center gap-3 rounded-xl bg-[var(--d-inset)] p-3">
-                    <item.icon className="h-5 w-5 shrink-0 text-[var(--d-accent)]" aria-hidden="true" />
-                    <div className="min-w-0 flex-1">
-                      <div className="text-sm font-semibold text-[var(--d-text)]">
-                        Turn {item.name} {next.on ? "on" : "off"}
-                      </div>
-                      <div className="text-xs text-[var(--d-muted)]">{next.reason}</div>
-                    </div>
-                    <button type="button" onClick={() => setOn(item.name, next.on)} className={buttonPrimary}>
-                      <Check className="h-3.5 w-3.5" aria-hidden="true" /> Approve
-                    </button>
-                    <button type="button" onClick={() => setOn(item.name, !next.on)} className={buttonSecondary} title="Keep it as it is">
-                      <X className="h-3.5 w-3.5" aria-hidden="true" /> Keep
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+    <div className="grid items-start gap-4 md:grid-cols-2 2xl:grid-cols-4">
+      {groups.map((group) => (
+        <Widget key={group.group} title={group.group} icon={group.icon}>
+          <div className="space-y-2.5">
+            {equipment
+              .filter((item) => item.group === group.group)
+              .map((item) => (
+                <DeviceRow key={item.id} name={item.name} icon={item.icon} spins={item.spins} />
+              ))}
+          </div>
         </Widget>
-      )}
-
-      <div className="grid items-start gap-4 lg:grid-cols-3">
-        {climateGroups.map((group) => (
-          <Widget key={group.group} title={group.group} icon={group.icon}>
-            <div className="space-y-2.5">
-              {climateEquipment
-                .filter((item) => item.group === group.group)
-                .map((item) => {
-                  const on = isOn(item.name);
-                  return (
-                    <div key={item.name} className={`flex items-center gap-3 rounded-xl border p-3 transition-colors ${on ? "border-[var(--d-card-border)] bg-[var(--d-accent-soft)]" : "border-[var(--d-line)] bg-[var(--d-inset)]"}`}>
-                      <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${on ? "bg-gradient-to-br from-[#6fe07f] to-[#00a218] text-white" : "bg-[var(--d-chip)] text-[var(--d-muted)]"}`}>
-                        <item.icon className={`h-5 w-5 ${on && item.spins ? "motion-safe:animate-spin [animation-duration:2.4s]" : ""}`} aria-hidden="true" />
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <div className="text-sm font-semibold text-[var(--d-text)]">{item.name}</div>
-                        <div className="truncate text-[11px] text-[var(--d-muted)]" title={mode === "auto" ? plan[item.name]?.reason : undefined}>
-                          {mode === "auto" ? plan[item.name]?.reason : on ? "Running" : "Off"}
-                        </div>
-                      </div>
-                      {mode === "manual" ? (
-                        <Toggle size="sm" on={on} onChange={() => setOn(item.name, !on)} label={`${item.name} power`} />
-                      ) : (
-                        <Pill tone={on ? "accent" : "muted"}>{on ? "On" : "Off"}</Pill>
-                      )}
-                    </div>
-                  );
-                })}
-            </div>
-          </Widget>
-        ))}
-      </div>
+      ))}
+      <Link
+        href="/dashboard/settings/?tab=shed"
+        className="flex items-center justify-center gap-2 rounded-xl border-2 border-dashed border-[var(--d-card-border)] p-4 text-sm font-semibold text-[var(--d-muted)] transition-colors hover:border-[var(--d-accent)] hover:text-[var(--d-accent)] md:col-span-2 2xl:col-span-4"
+      >
+        <Settings className="h-4 w-4" aria-hidden="true" /> Add or remove shed devices in Settings → Shed
+      </Link>
     </div>
   );
 }
@@ -233,9 +123,9 @@ export function ClimateEquipment() {
 // ---- Other tabs: status only, as icons ----
 
 export function ClimateStatusIcons({ className }: { className?: string }) {
-  const { mode, isOn, plan } = useClimate();
-  const current = climateModes.find((item) => item.value === mode) ?? climateModes[0];
-  const running = climateEquipment.filter((item) => isOn(item.name)).length;
+  const { mode, modeOf, equipment, isOn, plan } = useClimate();
+  const current = climateModes.find((item) => item.value === mode) ?? { label: "Mixed", detail: "Devices use different modes", icon: SlidersHorizontal };
+  const running = equipment.filter((item) => isOn(item.name)).length;
 
   return (
     <div className={`dash-card flex flex-wrap items-center gap-3 rounded-xl border border-[var(--d-card-border)] bg-[var(--d-card)] p-3 ${className ?? ""}`}>
@@ -243,20 +133,20 @@ export function ClimateStatusIcons({ className }: { className?: string }) {
         <current.icon className="h-3.5 w-3.5" aria-hidden="true" />
         Climate: {current.label}
       </span>
-      <ul className="flex flex-1 flex-wrap items-center gap-1.5" aria-label={`${running} of ${climateEquipment.length} climate devices running`}>
-        {climateEquipment.map((item) => {
+      <ul className="order-last flex basis-full flex-wrap items-center gap-1.5" aria-label={`${running} of ${equipment.length} shed devices running`}>
+        {equipment.map((item) => {
           const on = isOn(item.name);
-          const label = `${item.name}: ${on ? "on" : "off"}${mode === "auto" ? ` · ${plan[item.name]?.reason}` : ""}`;
+          const label = `${item.name}: ${on ? "on" : "off"}${modeOf(item.name) === "auto" ? ` · ${plan[item.name]?.reason}` : ""}`;
           return (
-            <li key={item.name} title={label} aria-label={label} className={`relative flex h-9 w-9 items-center justify-center rounded-lg ${on ? "bg-gradient-to-br from-[#6fe07f] to-[#00a218] text-white shadow-sm" : "bg-[var(--d-chip)] text-[var(--d-muted)]"}`}>
+            <li key={item.id} title={label} aria-label={label} className={`relative flex h-9 w-9 items-center justify-center rounded-lg ${on ? "bg-gradient-to-br from-[var(--d-accent-bright)] to-[var(--d-accent-strong)] text-white shadow-sm" : "bg-[var(--d-chip)] text-[var(--d-muted)]"}`}>
               <item.icon className={`h-4 w-4 ${on && item.spins ? "motion-safe:animate-spin [animation-duration:2.4s]" : ""}`} aria-hidden="true" />
-              {on && <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-[var(--d-card)] bg-[#6fe07f]" />}
+              {on && <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-[var(--d-card)] bg-[var(--d-accent-bright)]" />}
             </li>
           );
         })}
       </ul>
       <span className="text-xs text-[var(--d-muted)]">
-        {running} of {climateEquipment.length} running
+        {running} of {equipment.length} running
       </span>
       <Link href="/dashboard/climate" className="inline-flex items-center gap-1 text-xs font-semibold text-[var(--d-accent)] hover:underline">
         Climate Control <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />

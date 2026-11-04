@@ -3,7 +3,8 @@
 import { CalendarClock, CheckCircle2, ChartLine, Clock, Droplets, Gauge, History, Target, Waves } from "lucide-react";
 
 import { Widget } from "@/components/dashboard/dashboard-widgets";
-import { SectionHeader, SetpointsLink, reading, useFarmSetpoints } from "@/components/dashboard/monitor-widgets";
+import { useActiveModel } from "@/components/dashboard/device-automation";
+import { SectionHeader, SetpointsLink, reading } from "@/components/dashboard/monitor-widgets";
 import { SchedulerPanel, VolumePanel, useIrrigationPlan } from "@/components/dashboard/irrigation-planner";
 import { DashboardPage, InfoRow, PageHeader, Pill, StatTile, TabWidget, TrendChart } from "@/components/dashboard/page-kit";
 import { SoilMoistureIcon } from "@/components/dashboard/sensor-icons";
@@ -12,7 +13,8 @@ import { WaterSourceButton } from "@/components/dashboard/water-sources";
 import { irrigationHistory, irrigationSessions } from "@/data/mock";
 
 export default function IrrigationPage() {
-  const { values: setpoints } = useFarmSetpoints();
+  const model = useActiveModel("irrigation");
+  const stopAt = typeof model.values.stopAt === "number" ? model.values.stopAt : "–";
   const soil = reading("Soil Moisture");
   const plan = useIrrigationPlan();
 
@@ -24,7 +26,7 @@ export default function IrrigationPage() {
         <SectionHeader icon={Gauge} title="Status" detail="Where the field is against its moisture target" action={<SetpointsLink area="irrigation" />} />
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-5">
           <StatTile label="Soil Moisture" value={soil?.value ?? "–"} unit="%" icon={SoilMoistureIcon} note={soil?.location} />
-          <StatTile label="Target Moisture" value={setpoints.soil} unit="%" icon={Target} note="Set on the Automation tab" />
+          <StatTile label="Target Moisture" value={stopAt} unit="%" icon={Target} note={model.name ? `Model: ${model.name}` : "No active model"} />
           <StatTile label="Flow" value="4.1" unit="L/min" icon={Gauge} />
           <StatTile label="Next Recommended" value="17:45" icon={CalendarClock} tone="info" note="Today" />
           <WaterSourceButton />

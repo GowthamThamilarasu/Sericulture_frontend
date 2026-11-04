@@ -108,7 +108,7 @@ function AccessDialog({ user, onClose }: { user: FarmUser | null; onClose: () =>
                     role="radio"
                     aria-checked={active}
                     onClick={() => set({ features: [...item.features] })}
-                    className={`rounded-2xl border p-3 text-left transition-all ${active ? "border-transparent bg-gradient-to-br from-[#0f5c2e] to-[#00a218] text-white shadow-md" : "border-[var(--d-card-border)] bg-[var(--d-card)] hover:-translate-y-0.5"}`}
+                    className={`rounded-2xl border p-3 text-left transition-all ${active ? "border-transparent bg-gradient-to-br from-[var(--d-accent-deep)] to-[var(--d-accent-strong)] text-white shadow-md" : "border-[var(--d-card-border)] bg-[var(--d-card)] hover:-translate-y-0.5"}`}
                   >
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-bold">{item.id}</span>
@@ -205,7 +205,7 @@ function RemoteView({ user, onClose }: { user: FarmUser; onClose: () => void }) 
     <Dialog.Root open onOpenChange={(value) => !value && onClose()}>
       <Dialog.Overlay className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm" />
       <Dialog.Content className="fixed inset-3 z-[61] flex flex-col overflow-hidden rounded-3xl border border-[var(--d-line)] bg-[var(--d-popup)] text-[var(--d-text)] shadow-2xl sm:inset-6">
-        <header className="flex shrink-0 flex-wrap items-center gap-3 bg-gradient-to-r from-[#0f5c2e] to-[#11692f] px-5 py-4 text-white">
+        <header className="flex shrink-0 flex-wrap items-center gap-3 bg-gradient-to-r from-[var(--d-accent-deep)] to-[color-mix(in_srgb,var(--d-accent-deep)_80%,var(--d-accent-strong))] px-5 py-4 text-white">
           <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-sm font-bold ring-1 ring-white/20">{initials(user.name)}</span>
           <div className="min-w-0 flex-1">
             <Dialog.Title className="text-base font-bold">Remote view · {user.name}</Dialog.Title>
@@ -214,7 +214,7 @@ function RemoteView({ user, onClose }: { user: FarmUser; onClose: () => void }) 
             </Dialog.Description>
           </div>
           <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold">
-            <span className="h-2 w-2 animate-pulse rounded-full bg-[#6fe07f]" /> Live session
+            <span className="h-2 w-2 animate-pulse rounded-full bg-[var(--d-accent-bright)]" /> Live session
           </span>
           <a href="/dashboard/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 rounded-lg bg-white/15 px-3 py-1.5 text-xs font-semibold hover:bg-white/25">
             <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" /> Open dashboard
@@ -265,7 +265,7 @@ function RemoteView({ user, onClose }: { user: FarmUser; onClose: () => void }) 
             {device && (
               <section aria-label={`${device.name} diagnostics`} className="rounded-2xl border border-[var(--d-card-border)] bg-[var(--d-card)] p-4">
                 <div className="flex flex-wrap items-start gap-3">
-                  <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-[#6fe07f] to-[#00a218] text-white">
+                  <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--d-accent-bright)] to-[var(--d-accent-strong)] text-white">
                     <Cpu className="h-5 w-5" aria-hidden="true" />
                   </span>
                   <div className="min-w-0 flex-1">
@@ -354,7 +354,7 @@ export default function AdminPage() {
         <SectionHeader icon={Package} title="Packages" detail="What each package includes · a user's features can also be customised" />
         <div className="grid gap-4 md:grid-cols-3">
           {packages.map((item, index) => (
-            <article key={item.id} className={`relative overflow-hidden rounded-3xl border p-5 ${index === 2 ? "border-transparent bg-gradient-to-br from-[#0f5c2e] via-[#11692f] to-[#082f17] text-white" : "dash-card border-[var(--d-card-border)] bg-[var(--d-card)]"}`}>
+            <article key={item.id} className={`relative overflow-hidden rounded-3xl border p-5 ${index === 2 ? "border-transparent bg-gradient-to-br from-[var(--d-accent-deep)] via-[color-mix(in_srgb,var(--d-accent-deep)_80%,var(--d-accent-strong))] to-[color-mix(in_srgb,var(--d-accent-deep)_65%,black)] text-white" : "dash-card border-[var(--d-card-border)] bg-[var(--d-card)]"}`}>
               <div className="flex items-baseline justify-between gap-2">
                 <h3 className="text-lg font-bold">{item.id}</h3>
                 <span className={`text-xs font-semibold ${index === 2 ? "text-[#c8f5cf]" : "text-[var(--d-accent)]"}`}>{(() => {
@@ -419,7 +419,7 @@ export default function AdminPage() {
                   <tr key={user.id} className="border-b border-[var(--d-line)] last:border-b-0 hover:bg-[var(--d-inset)]">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
-                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#6fe07f] to-[#00a218] text-xs font-bold text-white">{initials(user.name)}</span>
+                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--d-accent-bright)] to-[var(--d-accent-strong)] text-xs font-bold text-white">{initials(user.name)}</span>
                         <div className="min-w-0">
                           <div className="flex items-center gap-1.5 font-semibold text-[var(--d-text)]">
                             {user.name}
@@ -436,7 +436,7 @@ export default function AdminPage() {
                       <div className="text-xs text-[var(--d-muted)]">{user.location}</div>
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${user.package === "Pro" ? "bg-[#0f5c2e] text-white" : user.package === "Custom" ? "bg-[var(--d-warn-soft)] text-[var(--d-warn)]" : "bg-[var(--d-accent-soft)] text-[var(--d-accent)]"}`}>{user.package}</span>
+                      <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${user.package === "Pro" ? "bg-[var(--d-accent-deep)] text-white" : user.package === "Custom" ? "bg-[var(--d-warn-soft)] text-[var(--d-warn)]" : "bg-[var(--d-accent-soft)] text-[var(--d-accent)]"}`}>{user.package}</span>
                       <div className="mt-1 text-[11px] text-[var(--d-muted)]">{user.features.length} features</div>
                     </td>
                     <td className="px-4 py-3">

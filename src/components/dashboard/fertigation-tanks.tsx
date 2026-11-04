@@ -88,9 +88,9 @@ function TankGauge({ tank }: { tank: NutrientTank }) {
       <div className="absolute inset-0 top-1 overflow-hidden rounded-[22px] border-2 border-[var(--d-card-border)] bg-[var(--d-inset)]">
         <div className="absolute inset-x-0 bottom-0 transition-[height] duration-700 ease-out" style={{ height: `${level}%` }}>
           <svg viewBox="0 0 200 20" preserveAspectRatio="none" className="tank-wave absolute -top-3 left-0 h-4 w-[200%]" aria-hidden="true">
-            <path d="M0 10 Q 25 0 50 10 T 100 10 T 150 10 T 200 10 V20 H0 Z" fill={low ? "#f5b942" : "#3fbf5f"} />
+            <path d="M0 10 Q 25 0 50 10 T 100 10 T 150 10 T 200 10 V20 H0 Z" style={{ fill: low ? "#f5b942" : "var(--d-accent)" }} />
           </svg>
-          <div className={`h-full w-full ${low ? "bg-gradient-to-b from-[#f5b942] to-[#b45309]" : "bg-gradient-to-b from-[#3fbf5f] to-[#0f5c2e]"}`} />
+          <div className={`h-full w-full ${low ? "bg-gradient-to-b from-[#f5b942] to-[#b45309]" : "bg-gradient-to-b from-[var(--d-accent)] to-[var(--d-accent-deep)]"}`} />
         </div>
         {[25, 50, 75].map((mark) => (
           <span key={mark} className="absolute right-0 h-px w-3 bg-[var(--d-muted)] opacity-40" style={{ bottom: `${mark}%` }} />

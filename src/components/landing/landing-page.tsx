@@ -13,13 +13,13 @@ export const siteShell = "overflow-x-clip bg-white font-sans text-ink";
 export const contactEmail = "info@saaram.co.in";
 
 const images = {
-  heroVisual: "/landing/hero-visual.jpg",
+  heroVisual: "/landing/hero-visual.png",
   shed: "/landing/shed.jpg",
   mulberry: "/landing/mulberry.jpg",
   dashboard: "/landing/dashboard.jpg",
   sensors: "/landing/sensors.jpg",
-  farmField: "/landing/farm-field.jpg",
-  rearingShed: "/landing/rearing-shed.jpg",
+  farmField: "/landing/farm-field.png",
+  rearingShed: "/landing/rearing-shed.png",
 };
 
 const pill =
@@ -410,7 +410,7 @@ export function FeaturePanel({
 function Logo({ light }: { light?: boolean }) {
   return (
     <Link href="/" aria-label="Paari Seritech home" className="flex shrink-0 items-center">
-      <BrandLogo plate={light} className={light ? "h-24" : "h-14 sm:h-16"} />
+      <BrandLogo plate={light} className={light ? "h-16 sm:h-20" : "h-10 sm:h-12"} />
     </Link>
   );
 }
@@ -686,10 +686,18 @@ export function LandingPage() {
                   <div className="scene-card relative flex min-h-[390px] items-end overflow-hidden rounded-[20px] sm:min-h-[430px] lg:min-h-[440px]">
                     <Photo src={level.image} label={`${level.name} level`} className="scene-photo absolute inset-0" />
                     <div aria-hidden="true" className="scene-shade absolute inset-0" />
-                    <div className="absolute left-5 top-5 rounded-xl bg-white px-4 py-1.5 font-display text-2xl font-bold italic text-brand [font-variation-settings:'SOFT'_100,'WONK'_1]">{level.number}</div>
-                    <div className="scene-badge absolute right-5 top-5">
-                      <span className="scene-badge-dot" />
-                      {level.badge}
+                    {/* Level number with the Paari logo, stamped on every level photo. */}
+                    <div className="absolute left-4 top-4 flex items-center gap-2.5 rounded-xl bg-white py-1.5 pl-3.5 pr-3 shadow-[0_8px_20px_-10px_rgb(16_18_17_/_0.45)] sm:left-5 sm:top-5 sm:gap-3 sm:pl-4">
+                      <span className="font-display text-2xl font-bold italic text-brand [font-variation-settings:'SOFT'_100,'WONK'_1]">{level.number}</span>
+                      <span aria-hidden="true" className="h-7 w-px bg-line" />
+                      <BrandLogo className="h-7 sm:h-8" />
+                    </div>
+                    {/* The badge needs the card's full width beside the number and logo, so it waits for wider phones. */}
+                    <div className="absolute right-4 top-4 hidden min-[440px]:block sm:right-5 sm:top-5">
+                      <div className="scene-badge">
+                        <span className="scene-badge-dot" />
+                        {level.badge}
+                      </div>
                     </div>
                     <div className="scene-panel relative m-5 w-full rounded-2xl bg-white px-6 pb-6 pt-9 text-center">
                       <div className="scene-icon absolute -top-6 left-1/2 flex h-12 w-12 -translate-x-1/2 items-center justify-center rounded-full border-4 border-white bg-brand text-white">
